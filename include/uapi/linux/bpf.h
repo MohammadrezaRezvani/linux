@@ -5485,6 +5485,10 @@ union bpf_attr {
  *
  *		**-ENOENT** if the bpf_local_storage cannot be found.
  */
+
+// TODO: add the signature of the new helper function
+// FN(pstate_get_epp, NUM, ##ctx)
+
 #define ___BPF_FUNC_MAPPER(FN, ctx...)			\
 	FN(unspec, 0, ##ctx)				\
 	FN(map_lookup_elem, 1, ##ctx)			\
