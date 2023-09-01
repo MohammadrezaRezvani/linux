@@ -849,7 +849,7 @@ int bpf_bprintf_prepare(char *fmt, u32 fmt_size, const u64 *raw_args,
 
 		/* The string is zero-terminated so if fmt[i] != 0, we can
 		 * always access fmt[i + 1], in the worst case it will be a 0
-		 */int
+		 */
 		i++;
 
 		/* skip optional "[0 +-][num]" width formatting field */
