@@ -7554,14 +7554,34 @@ static u32 *__btf_kfunc_id_set_contains(const struct btf *btf,
 
 	if (hook >= BTF_KFUNC_HOOK_MAX)
 		return NULL;
+	
+	// MOE
+	printk("MOE: in __btf_kfunc_id_set_contains, step 1\n");
+	////
+
 	if (!btf->kfunc_set_tab)
 		return NULL;
+	
+	// MOE
+	printk("MOE: in __btf_kfunc_id_set_contains, step 2\n");
+	////
+
 	set = btf->kfunc_set_tab->sets[hook];
 	if (!set)
 		return NULL;
+	
+	// MOE
+	printk("MOE: in __btf_kfunc_id_set_contains, step 3\n");
+	////
+	
 	id = btf_id_set8_contains(set, kfunc_btf_id);
 	if (!id)
 		return NULL;
+	
+	// MOE
+	printk("MOE: in __btf_kfunc_id_set_contains, step 4\n");
+	////
+
 	/* The flags for BTF ID are located next to it */
 	return id + 1;
 }
@@ -7606,6 +7626,11 @@ u32 *btf_kfunc_id_set_contains(const struct btf *btf,
 		return kfunc_flags;
 
 	hook = bpf_prog_type_to_kfunc_hook(prog_type);
+	
+	// MOE
+	printk("MOE: hook value: %d\n", hook);
+	////
+
 	return __btf_kfunc_id_set_contains(btf, hook, kfunc_btf_id);
 }
 

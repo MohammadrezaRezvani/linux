@@ -1995,7 +1995,7 @@ void bpf_cgroup_release(struct cgroup *cgrp)
  */
 struct cgroup *bpf_cgroup_ancestor(struct cgroup *cgrp, int level)
 {
-	struct cgroup *ancestor;
+	struct cgroup *ancestor;bpf_task_acquire
 
 	if (level > cgrp->level || level < 0)
 		return NULL;
@@ -2147,6 +2147,9 @@ static int __init kfunc_init(void)
 	ret = ret ?: register_btf_kfunc_id_set(BPF_PROG_TYPE_TRACEPOINT, &msr_kfunc_set);
 	ret = ret ?: register_btf_kfunc_id_set(BPF_PROG_TYPE_KPROBE, &msr_kfunc_set);
 	////
+
+	// TODO: Put printk of ret. put identifier at the beggining
+	printk("MOE: ret value = %d", ret);
 
 	return ret ?: register_btf_kfunc_id_set(BPF_PROG_TYPE_UNSPEC, &common_kfunc_set);
 }
