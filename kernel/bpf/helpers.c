@@ -1995,7 +1995,7 @@ void bpf_cgroup_release(struct cgroup *cgrp)
  */
 struct cgroup *bpf_cgroup_ancestor(struct cgroup *cgrp, int level)
 {
-	struct cgroup *ancestor;bpf_task_acquire
+	struct cgroup *ancestor;
 
 	if (level > cgrp->level || level < 0)
 		return NULL;
