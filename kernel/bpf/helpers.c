@@ -2136,22 +2136,45 @@ static int __init kfunc_init(void)
 	};
 
 	ret = register_btf_kfunc_id_set(BPF_PROG_TYPE_TRACING, &generic_kfunc_set);
+	// MOE: 
+	printk("MOE: ret value 1 = %d", ret);
+	////
 	ret = ret ?: register_btf_kfunc_id_set(BPF_PROG_TYPE_SCHED_CLS, &generic_kfunc_set);
+	// MOE: 
+	printk("MOE: ret value 2 = %d", ret);
+	////
 	ret = ret ?: register_btf_kfunc_id_set(BPF_PROG_TYPE_STRUCT_OPS, &generic_kfunc_set);
+	// MOE: 
+	printk("MOE: ret value 3 = %d", ret);
+	////
 	ret = ret ?: register_btf_id_dtor_kfuncs(generic_dtors,
 						  ARRAY_SIZE(generic_dtors),
 						  THIS_MODULE);
 	
-	// MOE: functions to change MSRs
-	ret = ret ?: register_btf_kfunc_id_set(BPF_PROG_TYPE_TRACING, &msr_kfunc_set);
-	ret = ret ?: register_btf_kfunc_id_set(BPF_PROG_TYPE_TRACEPOINT, &msr_kfunc_set);
-	ret = ret ?: register_btf_kfunc_id_set(BPF_PROG_TYPE_KPROBE, &msr_kfunc_set);
+	// MOE: 
+	printk("MOE: ret value 4 = %d", ret);
 	////
 
-	// TODO: Put printk of ret. put identifier at the beggining
-	printk("MOE: ret value = %d", ret);
+	// MOE: functions to change MSRs
+	ret = ret ?: register_btf_kfunc_id_set(BPF_PROG_TYPE_TRACING, &msr_kfunc_set);
 
-	return ret ?: register_btf_kfunc_id_set(BPF_PROG_TYPE_UNSPEC, &common_kfunc_set);
+	// Doesn't support BPF_PROG_TYPE_TRACEPOINT and BPF_PROG_TYPE_KPROBE
+	// Check bpf_prog_type_to_kfunc_hook()
+	// ret = ret ?: register_btf_kfunc_id_set(BPF_PROG_TYPE_TRACEPOINT, &msr_kfunc_set);
+	// ret = ret ?: register_btf_kfunc_id_set(BPF_PROG_TYPE_KPROBE, &msr_kfunc_set);
+	////
+
+	// MOE: 
+	printk("MOE: ret value 5 = %d", ret);
+	////
+
+	ret = ret ?: register_btf_kfunc_id_set(BPF_PROG_TYPE_UNSPEC, &common_kfunc_set);
+
+	// MOE: 
+	printk("MOE: ret value 6 = %d", ret);
+	////
+
+	return ret;
 }
 
 late_initcall(kfunc_init);
