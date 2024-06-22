@@ -2537,6 +2537,12 @@ static int __init kfunc_init(void)
 	// MOE: functions to change MSRs
 	ret = ret ?: register_btf_kfunc_id_set(BPF_PROG_TYPE_TRACING, &msr_kfunc_set);
 
+	// MOE: 
+	printk("MOE: ret value 6 = %d", ret);
+	////
+
+	ret = ret ?: register_btf_kfunc_id_set(BPF_PROG_TYPE_XDP, &msr_kfunc_set);
+
 	// Doesn't support BPF_PROG_TYPE_TRACEPOINT and BPF_PROG_TYPE_KPROBE
 	// Check bpf_prog_type_to_kfunc_hook()
 	// ret = ret ?: register_btf_kfunc_id_set(BPF_PROG_TYPE_TRACEPOINT, &msr_kfunc_set);
@@ -2544,7 +2550,7 @@ static int __init kfunc_init(void)
 	////
 
 	// MOE: 
-	printk("MOE: ret value 6 = %d", ret);
+	printk("MOE: ret value final = %d", ret);
 	////
 
 	return ret;
