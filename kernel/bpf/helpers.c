@@ -26,6 +26,10 @@
 
 #include "../../lib/kstrtox.h"
 
+// MOE: include msr
+#include <asm/msr.h>
+////
+
 /* If kernel subsystem is allowing eBPF programs to call this function,
  * inside its own verifier_ops->get_func_proto() callback it should return
  * bpf_map_lookup_elem_proto, so that verifier can properly check the arguments
@@ -2544,7 +2548,29 @@ __bpf_kfunc void bpf_throw(u64 cookie)
 	WARN(1, "A call to BPF exception callback should never return\n");
 }
 
+// MOE: functions to change MSRs
+__bpf_kfunc int bpf_rdmsrl_on_cpu(unsigned int cpu, u32 msr_no, u64 *q)
+{
+	return rdmsrl_on_cpu(cpu, msr_no, q);
+}
+__bpf_kfunc int bpf_wrmsrl_on_cpu(unsigned int cpu, u32 msr_no, u64 q)
+{
+	return wrmsrl_on_cpu(cpu, msr_no, q);	
+}
+////
+
 __bpf_kfunc_end_defs();
+
+// MOE: functions to change MSRs
+BTF_SET8_START(msr_func_set)
+BTF_ID_FLAGS(func, bpf_rdmsrl_on_cpu)
+BTF_ID_FLAGS(func, bpf_wrmsrl_on_cpu)
+BTF_SET8_END(msr_func_set)
+static const struct btf_kfunc_id_set msr_kfunc_set = {
+	.owner = THIS_MODULE,
+	.set   = &msr_func_set,
+};
+////
 
 BTF_SET8_START(generic_btf_ids)
 #ifdef CONFIG_KEXEC_CORE
@@ -2644,13 +2670,45 @@ static int __init kfunc_init(void)
 	};
 
 	ret = register_btf_kfunc_id_set(BPF_PROG_TYPE_TRACING, &generic_kfunc_set);
+	// MOE: 
+	printk("MOE: ret value 1 = %d", ret);
+	////
 	ret = ret ?: register_btf_kfunc_id_set(BPF_PROG_TYPE_SCHED_CLS, &generic_kfunc_set);
+	// MOE: 
+	printk("MOE: ret value 2 = %d", ret);
+	////
 	ret = ret ?: register_btf_kfunc_id_set(BPF_PROG_TYPE_XDP, &generic_kfunc_set);
+	// MOE: 
+	printk("MOE: ret value 3 = %d", ret);
+	////
 	ret = ret ?: register_btf_kfunc_id_set(BPF_PROG_TYPE_STRUCT_OPS, &generic_kfunc_set);
+	// MOE: 
+	printk("MOE: ret value 4 = %d", ret);
+	////
 	ret = ret ?: register_btf_id_dtor_kfuncs(generic_dtors,
 						  ARRAY_SIZE(generic_dtors),
 						  THIS_MODULE);
-	return ret ?: register_btf_kfunc_id_set(BPF_PROG_TYPE_UNSPEC, &common_kfunc_set);
+	// MOE: 
+	printk("MOE: ret value 5 = %d", ret);
+	////
+	ret = ret ?: register_btf_kfunc_id_set(BPF_PROG_TYPE_UNSPEC, &common_kfunc_set);
+	// MOE: 
+	printk("MOE: ret value 6 = %d", ret);
+	////
+
+	// MOE: functions to change MSRs
+	ret = ret ?: register_btf_kfunc_id_set(BPF_PROG_TYPE_TRACING, &msr_kfunc_set);
+	printk("MOE: ret value BPF_PROG_TYPE_TRACING = %d", ret);
+	ret = ret ?: register_btf_kfunc_id_set(BPF_PROG_TYPE_XDP, &msr_kfunc_set);
+	printk("MOE: ret value BPF_PROG_TYPE_XDP = %d", ret);
+	// Doesn't support BPF_PROG_TYPE_TRACEPOINT and BPF_PROG_TYPE_KPROBE
+	// Check bpf_prog_type_to_kfunc_hook()
+	// ret = ret ?: register_btf_kfunc_id_set(BPF_PROG_TYPE_TRACEPOINT, &msr_kfunc_set);
+	// ret = ret ?: register_btf_kfunc_id_set(BPF_PROG_TYPE_KPROBE, &msr_kfunc_set);
+	printk("MOE: ret value final = %d", ret);
+	////
+
+	return ret;
 }
 
 late_initcall(kfunc_init);
