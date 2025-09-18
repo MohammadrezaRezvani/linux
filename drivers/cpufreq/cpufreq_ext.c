@@ -409,11 +409,18 @@ static unsigned int ext_gov_update(struct cpufreq_policy *policy)
 {
 	struct ext_policy *ext;
 	struct policy_dbs_info *policy_dbs;
+	struct dbs_data *dbs_data;
 	unsigned int update_sampling_rate = 0;
-	struct dbs_governor *gov = dbs_governor_of(policy);
 
-	/* Only need to update current policy freq */
-	policy_dbs = container_of((void *)policy, struct policy_dbs_info, policy);
+	/* Get policy_dbs_info from policy's governor_data */
+	policy_dbs = policy->governor_data;
+	if (!policy_dbs)
+		return 0;
+
+	/* Get dbs_data directly from policy_dbs for better stability */
+	dbs_data = policy_dbs->dbs_data;
+	if (!dbs_data)
+		return 0;
 
 	ext = to_ext_policy(policy_dbs);
 
@@ -431,7 +438,7 @@ static unsigned int ext_gov_update(struct cpufreq_policy *policy)
 		update_sampling_rate = ext_ops_global.get_sampling_rate(policy);
 
 	/* If get_sampling_rate return 0, means we don't modify sampling_rate any more. */
-	return update_sampling_rate == 0 ? gov->gdbs_data->sampling_rate : update_sampling_rate;
+	return update_sampling_rate == 0 ? dbs_data->sampling_rate : update_sampling_rate;
 }
 
 static struct policy_dbs_info *ext_gov_alloc(void)
