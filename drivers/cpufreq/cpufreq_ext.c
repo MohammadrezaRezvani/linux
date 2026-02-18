@@ -16,6 +16,7 @@
 #include <linux/bpf.h>
 #include <linux/btf.h>
 #include <linux/btf_ids.h>
+#include <linux/printk.h>
 #include "cpufreq_governor.h"
 
 #define DEAFULT_FREQUENCY_UP_THRESHOLD 30
@@ -397,7 +398,7 @@ static inline struct ext_policy *to_ext_policy(struct policy_dbs_info *policy_db
 	return container_of(policy_dbs, struct ext_policy, policy_dbs);
 }
 
-static unsigned int ext_get_next_freq_default(struct cpufreq_policy *policy)
+static noinline __noclone unsigned int ext_get_next_freq_default(struct cpufreq_policy *policy)
 {
 	/*
 	 * Set cpu freq to max as default.
@@ -411,34 +412,69 @@ static unsigned int ext_gov_update(struct cpufreq_policy *policy)
 	struct policy_dbs_info *policy_dbs;
 	struct dbs_data *dbs_data;
 	unsigned int update_sampling_rate = 0;
+	bool use_bpf_freq, use_bpf_sr;
+	unsigned long next = 0;
+	unsigned int sr = 0;
 
 	/* Get policy_dbs_info from policy's governor_data */
 	policy_dbs = policy->governor_data;
-	if (!policy_dbs)
+	if (!policy_dbs) {
+		pr_warn_once("cpufreq_ext: policy->governor_data is NULL (cpu=%u)\n",
+			     policy->cpu);
 		return 0;
+	}
 
 	/* Get dbs_data directly from policy_dbs for better stability */
 	dbs_data = policy_dbs->dbs_data;
-	if (!dbs_data)
+	if (!dbs_data) {
+		pr_warn_once("cpufreq_ext: policy_dbs->dbs_data is NULL (cpu=%u)\n",
+			     policy->cpu);
 		return 0;
+	}
 
 	ext = to_ext_policy(policy_dbs);
 
-	if (static_branch_likely(&ext_gov_load) &&
-	    (ext_ops_global.get_next_freq != get_next_freq_nop))
-		ext->next_freq = ext_ops_global.get_next_freq(policy);
+	// if (static_branch_likely(&ext_gov_load) &&
+	//     (ext_ops_global.get_next_freq != get_next_freq_nop))
+	// 	ext->next_freq = ext_ops_global.get_next_freq(policy);
+	// else
+	// 	ext->next_freq = ext_get_next_freq_default(policy);
+
+	use_bpf_freq = static_branch_likely(&ext_gov_load) &&
+		       (ext_ops_global.get_next_freq != get_next_freq_nop);
+	use_bpf_sr = static_branch_likely(&ext_gov_load) &&
+		     (ext_ops_global.get_sampling_rate != get_sampling_rate_nop);
+
+	if (use_bpf_freq)
+		next = ext_ops_global.get_next_freq(policy);
 	else
-		ext->next_freq = ext_get_next_freq_default(policy);
+		next = ext_get_next_freq_default(policy);
+
+	ext->next_freq = next;
+
+	/* One compact line that tells you the branch and the decision inputs. */
+	pr_info_ratelimited(
+		"cpufreq_ext: cpu=%u use_bpf_freq=%d use_bpf_sr=%d cur=%u min=%u max=%u next=%lu get_next=%pS sampling=%pS\n",
+		policy->cpu, use_bpf_freq, use_bpf_sr,
+		policy->cur, policy->min, policy->max, next,
+		ext_ops_global.get_next_freq, ext_ops_global.get_sampling_rate);
 
 	if (ext->next_freq != policy->cur)
 		__cpufreq_driver_target(policy, ext->next_freq, CPUFREQ_RELATION_H);
 
-	if (static_branch_likely(&ext_gov_load) &&
-	    (ext_ops_global.get_sampling_rate != get_sampling_rate_nop))
+	// if (static_branch_likely(&ext_gov_load) &&
+	//     (ext_ops_global.get_sampling_rate != get_sampling_rate_nop))
+	// 	update_sampling_rate = ext_ops_global.get_sampling_rate(policy);
+	if (use_bpf_sr)
 		update_sampling_rate = ext_ops_global.get_sampling_rate(policy);
 
 	/* If get_sampling_rate return 0, means we don't modify sampling_rate any more. */
-	return update_sampling_rate == 0 ? dbs_data->sampling_rate : update_sampling_rate;
+	// return update_sampling_rate == 0 ? dbs_data->sampling_rate : update_sampling_rate;
+
+	sr = (update_sampling_rate == 0) ? dbs_data->sampling_rate : update_sampling_rate;
+	pr_info_ratelimited("cpufreq_ext: cpu=%u sampling_rate=%u (bpf_return=%u default=%u)\n",
+			    policy->cpu, sr, update_sampling_rate, dbs_data->sampling_rate);
+	return sr;
 }
 
 static struct policy_dbs_info *ext_gov_alloc(void)
