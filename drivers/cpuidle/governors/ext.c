@@ -449,6 +449,9 @@ static int ext_select_dfl(struct cpuidle_driver *drv, struct cpuidle_device *dev
 		break;
 	}
 	selected = i;
+	pr_info_ratelimited("cpuidle_ext: cpu=%u selected=%d (latency_req=%lld sleep_len=%lld next_pred=%llu)\n",
+			    dev->cpu, selected, (long long)latency_req, (long long)delta,
+			    (unsigned long long)data->next_pred);
 	return selected;
 }
 
@@ -484,13 +487,30 @@ static int ext_select(struct cpuidle_driver *drv, struct cpuidle_device *dev,
 			   bool *stop_tick)
 {
 	int state = 0;
+	int bpf_state = -1;
+	int dfl_state = -1;
+	bool use_bpf;
+	int (*select_fn)(struct cpuidle_driver *drv, struct cpuidle_device *dev);
+	bool (*set_stop_tick_fn)(void) = NULL;
 
-	if (static_branch_likely(&ops_enabled_key)) {
-		state = ops->select(drv, dev);
+	use_bpf = static_branch_likely(&ops_enabled_key);
+	if (use_bpf) {
+		bpf_state = ops->select(drv, dev);
+		state = bpf_state;
 		*stop_tick = ops->set_stop_tick();
+		select_fn = ops->select;
+		set_stop_tick_fn = ops->set_stop_tick;
 	} else {
-		state = ext_select_dfl(drv, dev, stop_tick);
+		dfl_state = ext_select_dfl(drv, dev, stop_tick);
+		state = dfl_state;
+		select_fn = ext_select_dfl;
 	}
+
+	pr_info_ratelimited(
+		"cpuidle_ext: cpu=%u use_bpf=%d state=%d stop_tick=%d select=%pS set_stop_tick=%pS\n",
+		dev->cpu, use_bpf, state, *stop_tick, select_fn, set_stop_tick_fn);
+	pr_info_ratelimited("cpuidle_ext: cpu=%u state=%d (bpf_return=%d default=%d)\n",
+			    dev->cpu, state, bpf_state, dfl_state);
 	return state;
 }
 
