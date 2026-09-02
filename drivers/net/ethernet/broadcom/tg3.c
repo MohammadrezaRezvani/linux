@@ -68,6 +68,12 @@
 #include <uapi/linux/net_tstamp.h>
 #include <linux/ptp_clock_kernel.h>
 
+#ifdef CONFIG_BPF_SYSCALL
+#include <linux/bpf.h>
+#include <linux/btf.h>
+#include <linux/btf_ids.h>
+#endif
+
 #define BAR_0	0
 #define BAR_2	2
 
@@ -9558,6 +9564,19 @@ static void tg3_coal_tx_init(struct tg3 *tp, struct ethtool_coalesce *ec)
 	}
 }
 
+static void tg3_write_rx_coalesce_vector(struct tg3 *tp, unsigned int vector,
+					 u32 usecs, u32 max_frames,
+					 u32 max_frames_irq)
+{
+	u32 reg = HOSTCC_RXCOL_TICKS_VEC1 + vector * 0x18;
+
+	tw32(reg, usecs);
+	reg = HOSTCC_RXMAX_FRAMES_VEC1 + vector * 0x18;
+	tw32(reg, max_frames);
+	reg = HOSTCC_RXCOAL_MAXF_INT_VEC1 + vector * 0x18;
+	tw32(reg, max_frames_irq);
+}
+
 static void tg3_coal_rx_init(struct tg3 *tp, struct ethtool_coalesce *ec)
 {
 	int i = 0;
@@ -9574,22 +9593,13 @@ static void tg3_coal_rx_init(struct tg3 *tp, struct ethtool_coalesce *ec)
 		tw32(HOSTCC_RXCOAL_MAXF_INT, 0);
 	}
 
-	for (; i < limit; i++) {
-		u32 reg;
+	for (; i < limit; i++)
+		tg3_write_rx_coalesce_vector(tp, i, ec->rx_coalesce_usecs,
+					     ec->rx_max_coalesced_frames,
+					     ec->rx_max_coalesced_frames_irq);
 
-		reg = HOSTCC_RXCOL_TICKS_VEC1 + i * 0x18;
-		tw32(reg, ec->rx_coalesce_usecs);
-		reg = HOSTCC_RXMAX_FRAMES_VEC1 + i * 0x18;
-		tw32(reg, ec->rx_max_coalesced_frames);
-		reg = HOSTCC_RXCOAL_MAXF_INT_VEC1 + i * 0x18;
-		tw32(reg, ec->rx_max_coalesced_frames_irq);
-	}
-
-	for (; i < tp->irq_max - 1; i++) {
-		tw32(HOSTCC_RXCOL_TICKS_VEC1 + i * 0x18, 0);
-		tw32(HOSTCC_RXMAX_FRAMES_VEC1 + i * 0x18, 0);
-		tw32(HOSTCC_RXCOAL_MAXF_INT_VEC1 + i * 0x18, 0);
-	}
+	for (; i < tp->irq_max - 1; i++)
+		tg3_write_rx_coalesce_vector(tp, i, 0, 0, 0);
 }
 
 static void __tg3_set_coalesce(struct tg3 *tp, struct ethtool_coalesce *ec)
@@ -18447,4 +18457,147 @@ static struct pci_driver tg3_driver = {
 	.shutdown	= tg3_shutdown,
 };
 
-module_pci_driver(tg3_driver);
+#ifdef CONFIG_BPF_SYSCALL
+__bpf_kfunc_start_defs();
+
+/* bpf_tg3_set_rx_coalesce - Set global RX interrupt coalescing on a tg3 netdev
+ *
+ * Restricted to tg3 net_devices identified by ifindex. Updates tp->coal RX
+ * fields and, when the interface is running, programs RX HostCC coalescing
+ * registers only.
+ *
+ * Returns 0 on success, negative errno on failure.
+ */
+__bpf_kfunc int bpf_tg3_set_rx_coalesce(u32 ifindex, u32 rx_usecs, u32 rx_frames)
+{
+	struct net_device *dev;
+	struct tg3 *tp;
+
+	if (!ifindex)
+		return -EINVAL;
+
+	if (!rx_usecs || rx_usecs > MAX_RXCOL_TICKS ||
+	    rx_frames > MAX_RXMAX_FRAMES)
+		return -EINVAL;
+
+	rcu_read_lock();
+	dev = dev_get_by_index_rcu(&init_net, ifindex);
+	if (!dev || dev->netdev_ops != &tg3_netdev_ops) {
+		rcu_read_unlock();
+		return -EINVAL;
+	}
+
+	tp = netdev_priv(dev);
+
+	if (tp->pcierr_recovery) {
+		rcu_read_unlock();
+		return -EAGAIN;
+	}
+
+	tp->coal.rx_coalesce_usecs = rx_usecs;
+	tp->coal.rx_max_coalesced_frames = rx_frames;
+
+	if (netif_running(dev)) {
+		tg3_full_lock(tp, 0);
+		tg3_coal_rx_init(tp, &tp->coal);
+		tg3_full_unlock(tp);
+	}
+
+	rcu_read_unlock();
+	return 0;
+}
+
+/* bpf_tg3_set_rx_coalesce_queue - Set per-RX-queue RX coalescing on a tg3 netdev
+ *
+ * Restricted to tg3 net_devices identified by ifindex. When RSS is enabled,
+ * programs the HostCC vector matching Linux RX queue @queue. Does not update
+ * the global tp->coal cache (ethtool -c / link reset may reprogram all vectors).
+ *
+ * Returns 0 on success, negative errno on failure.
+ */
+__bpf_kfunc int bpf_tg3_set_rx_coalesce_queue(u32 ifindex, u32 queue,
+					      u32 rx_usecs, u32 rx_frames)
+{
+	struct net_device *dev;
+	struct tg3 *tp;
+
+	if (!ifindex)
+		return -EINVAL;
+
+	if (!rx_usecs || rx_usecs > MAX_RXCOL_TICKS ||
+	    rx_frames > MAX_RXMAX_FRAMES)
+		return -EINVAL;
+
+	rcu_read_lock();
+	dev = dev_get_by_index_rcu(&init_net, ifindex);
+	if (!dev || dev->netdev_ops != &tg3_netdev_ops) {
+		rcu_read_unlock();
+		return -EINVAL;
+	}
+
+	tp = netdev_priv(dev);
+
+	if (tp->pcierr_recovery) {
+		rcu_read_unlock();
+		return -EAGAIN;
+	}
+
+	if (!tg3_flag(tp, ENABLE_RSS)) {
+		rcu_read_unlock();
+		return -EOPNOTSUPP;
+	}
+
+	if (queue >= tp->rxq_cnt) {
+		rcu_read_unlock();
+		return -EINVAL;
+	}
+
+	if (netif_running(dev)) {
+		tg3_full_lock(tp, 0);
+		tg3_write_rx_coalesce_vector(tp, queue, rx_usecs, rx_frames,
+					     tp->coal.rx_max_coalesced_frames_irq);
+		tg3_full_unlock(tp);
+	}
+
+	rcu_read_unlock();
+	return 0;
+}
+
+__bpf_kfunc_end_defs();
+
+BTF_KFUNCS_START(tg3_bpf_kfunc_ids)
+BTF_ID_FLAGS(func, bpf_tg3_set_rx_coalesce)
+BTF_ID_FLAGS(func, bpf_tg3_set_rx_coalesce_queue)
+BTF_KFUNCS_END(tg3_bpf_kfunc_ids)
+
+static const struct btf_kfunc_id_set tg3_bpf_kfunc_set = {
+	.owner = THIS_MODULE,
+	.set   = &tg3_bpf_kfunc_ids,
+};
+
+static int __init tg3_bpf_init(void)
+{
+	return register_btf_kfunc_id_set(BPF_PROG_TYPE_SCHED_CLS,
+				       &tg3_bpf_kfunc_set);
+}
+#endif /* CONFIG_BPF_SYSCALL */
+
+static int __init tg3_module_init(void)
+{
+#ifdef CONFIG_BPF_SYSCALL
+	int err;
+
+	err = tg3_bpf_init();
+	if (err)
+		return err;
+#endif
+	return pci_register_driver(&tg3_driver);
+}
+
+static void __exit tg3_module_exit(void)
+{
+	pci_unregister_driver(&tg3_driver);
+}
+
+module_init(tg3_module_init);
+module_exit(tg3_module_exit);
