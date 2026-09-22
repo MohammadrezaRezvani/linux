@@ -295,11 +295,15 @@ static int ops_check_member(const struct btf_type *t,
 	u32 moff = __btf_member_bit_offset(t, member) / 8;
 
 	switch (moff) {
-	case offsetof(struct cpuidle_gov_ext_ops, enable):
-	case offsetof(struct cpuidle_gov_ext_ops, disable):
 	case offsetof(struct cpuidle_gov_ext_ops, select):
 	case offsetof(struct cpuidle_gov_ext_ops, set_stop_tick):
 	case offsetof(struct cpuidle_gov_ext_ops, reflect):
+		/* called from the idle loop with IRQs disabled */
+		if (prog->sleepable)
+			return -EINVAL;
+		break;
+	case offsetof(struct cpuidle_gov_ext_ops, enable):
+	case offsetof(struct cpuidle_gov_ext_ops, disable):
 	case offsetof(struct cpuidle_gov_ext_ops, init):
 	case offsetof(struct cpuidle_gov_ext_ops, exit):
 		break;

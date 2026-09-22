@@ -105,7 +105,7 @@ void BPF_PROG(bpf_cpuidle_disable, struct cpuidle_driver *drv, struct cpuidle_de
 }
 
 /* Select the next idle state */
-SEC("struct_ops.s/select")
+SEC("struct_ops/select")
 int BPF_PROG(bpf_cpuidle_select, struct cpuidle_driver *drv, struct cpuidle_device *dev)
 {
 	u32 key = 0;
@@ -161,14 +161,14 @@ int BPF_PROG(bpf_cpuidle_select, struct cpuidle_driver *drv, struct cpuidle_devi
 }
 
 //enable or disable scheduling tick after selecting cpuidle state
-SEC("struct_ops.s/set_stop_tick")
+SEC("struct_ops/set_stop_tick")
 bool BPF_PROG(bpf_cpuidle_set_stop_tick)
 {
 	return false;
 }
 
 /* Reflect function called after entering an idle state */
-SEC("struct_ops.s/reflect")
+SEC("struct_ops/reflect")
 void BPF_PROG(bpf_cpuidle_reflect, struct cpuidle_device *dev, int index)
 {
 	u32 key = 0;

@@ -1,0 +1,4 @@
+*.o
+*.bin
+runs/
+bnxt_runs/
