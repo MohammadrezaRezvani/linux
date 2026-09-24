@@ -199,7 +199,13 @@ static void ext_disable(void)
 {
 	pr_info("%s : Unregister ext governor(%s).\n", __func__, ext_ops_global.name);
 	static_branch_disable(&ext_gov_load);
-	ext_global_tuner->ext_gov_stat = CPUFREQ_EXT_INIT;
+	/*
+	 * The link is released from a workqueue, so ext_unreg() can run after
+	 * the policy already switched away from "ext" and ext_gov_exit() freed
+	 * the tuner.
+	 */
+	if (ext_global_tuner)
+		ext_global_tuner->ext_gov_stat = CPUFREQ_EXT_INIT;
 	ext_ops_global.get_next_freq = get_next_freq_nop;
 	ext_ops_global.get_sampling_rate = get_sampling_rate_nop;
 	ext_ops_global.init = init_nop;
@@ -506,6 +512,9 @@ static int ext_gov_init(struct dbs_data *dbs_data)
 	dbs_data->ignore_nice_load = 0;
 	dbs_data->tuners = tuner;
 	dbs_data->up_threshold = DEAFULT_FREQUENCY_UP_THRESHOLD;
+
+	/* serialize against ext_reg()/ext_unreg() */
+	mutex_lock(&ext_mutex);
 	ext_global_tuner = tuner;
 	/* Disable ext_gov_load as default */
 	static_branch_disable(&ext_gov_load);
@@ -516,6 +525,7 @@ static int ext_gov_init(struct dbs_data *dbs_data)
 	ext_ops_global.init = init_nop;
 	ext_ops_global.exit = exit_nop;
 	strscpy(ext_ops_global.name, CPUFREQ_EXT_DEFAULT_NAME, strlen(CPUFREQ_EXT_DEFAULT_NAME));
+	mutex_unlock(&ext_mutex);
 	return 0;
 }
 
@@ -526,11 +536,13 @@ static void ext_gov_exit(struct dbs_data *dbs_data)
 	if (!dbs_data || !dbs_data->tuners)
 		return;
 
+	mutex_lock(&ext_mutex);
 	tuner = (struct ext_tuner *)dbs_data->tuners;
 	tuner->ext_gov_stat = CPUFREQ_EXT_NONE;
 	kfree(dbs_data->tuners);
 	dbs_data->tuners = NULL;
 	ext_global_tuner = NULL;
+	mutex_unlock(&ext_mutex);
 }
 
 static void ext_gov_start(struct cpufreq_policy *policy)
