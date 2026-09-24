@@ -8,82 +8,97 @@ kfuncs that let those governors control NIC RX interrupt (NAPI) coalescing. Ther
 detailed guides in `drivers/net/ethernet/broadcom/CLAUDE.md` and
 `drivers/net/ethernet/broadcom/bnxt/CLAUDE.md`.
 
-## Project state (as of 2026-09-22)
+## Project state (as of 2026-09-24)
 
-**Goal:** let the cpuidle/cpufreq ext governors change RX coalescing on eno1np0 (bnxt) from BPF.
+**Goal:** let BPF (a userspace-driven sweep first, then the cpuidle/cpufreq ext governors)
+change the RX coalescing timer (rx-usecs only) on eno1np0 exactly like
+`ethtool -C eno1np0 rx-usecs U`. The experiments live in the MOext repo (see below).
 
-**Branch:** `napi_kfuncs_from_dbgprint`. **Nothing from this work is committed yet.**
-- Modified: `drivers/cpuidle/governors/ext.c`, `net/ethtool/Makefile`,
-  `tools/testing/selftests/bpf/progs/cpuidle_gov_ext.c`.
-- New: `net/ethtool/bpf_coalesce.c`, `Documentation/bpf/netdev-coalesce-kfuncs.md`,
-  `tools/testing/selftests/bpf/progs/{netdev_coal_syscall,cpuidle_ext_coal,cpufreq_ext_coal}.c`,
-  `tools/testing/selftests/bpf/netdev_coal/` (test scripts), and the CLAUDE.md files.
+**Branch:** `napi_kfuncs_from_dbgprint`. The first version of the kfuncs is committed
+(`86ddc216141e add generic coalescing kfunc`). Committed on top of it (2026-09-24):
+`8b4485753344 cpufreq_ext: fix NULL deref in ext_disable() after governor exit` and
+`bpf_coalesce: rx-usecs only, track ethtool changes`, which contain:
+- `net/ethtool/bpf_coalesce.c`: the kfuncs now take **rx-usecs only**
+  (`request(ifindex, usecs)`, `set(ifindex, usecs)`, `get(ifindex, &usecs)`); rx-frames is
+  passed through unchanged. `request` accepts rx-usecs 0 like ethtool. New
+  `netdev_coal_sync()` is called from `ethnl_notify()` for `ETHTOOL_MSG_COALESCE_NTF`
+  (`net/ethtool/netlink.{c,h}`), so after any `ethtool -C` (netlink or ioctl) the slot holds
+  the driver's real rx-usecs. This fixed a bug where `request` silently dropped a value that
+  BPF had applied before and ethtool had since changed, and made `get` track ethtool. The
+  apply result is now recorded under rtnl.
+- `drivers/cpufreq/cpufreq_ext.c`: `ext_disable()` checks `ext_global_tuner` for NULL, and
+  `ext_gov_init()`/`ext_gov_exit()` hold `ext_mutex`. Before, unregistering the BPF governor
+  and then switching `scaling_governor` away quickly oopsed in `ext_disable()` (the link is
+  released from a workqueue, after `ext_gov_exit()` freed the tuner) with `ext_mutex` held,
+  so every later registration hung in D state until reboot.
+- Test programs and scripts updated for the usecs-only API (`progs/netdev_coal_syscall.c`,
+  `cpufreq_ext_coal.c`, `cpuidle_ext_coal.c`, `netdev_coal/*`). New:
+  `netdev_coal/netdev_coal_run.py` (runs the syscall prog with `BPF_PROG_TEST_RUN` via
+  ctypes, because `bpftool prog run` gets `-EINVAL` for syscall programs) and
+  `netdev_coal/ethtool_equiv.sh` (compares `ethtool -C` with `set`/`request`: full
+  `ethtool -c`, every firmware 0x53 message, COALESCE_NTF count).
+- `Documentation/bpf/netdev-coalesce-kfuncs.md` updated.
+- `netdev_coal/MOEXT_PROMPT.md`: the prompt for the Claude session in mibna001's MOext.
 
-**Implemented** (design and API: `Documentation/bpf/netdev-coalesce-kfuncs.md`):
-- `net/ethtool/bpf_coalesce.c` (built in) adds driver-independent kfuncs. They call
-  `ethtool_ops->set_coalesce` the same way `ethtool -C` does, under rtnl, `netdev_lock_ops`
-  and `ethnl_ops_begin`. They read the current settings first and change only rx-usecs and
-  rx-frames.
-  - `bpf_netdev_request_rx_coalesce(ifindex, usecs, frames)`: never sleeps, safe with IRQs
-    off. Stores the request in an 8-slot table (raw spinlock), drops duplicates, and a worker
-    on `system_unbound_wq` applies it.
-  - `bpf_netdev_set_rx_coalesce(...)`: `KF_SLEEPABLE`, applies synchronously.
-  - `bpf_netdev_get_rx_coalesce(ifindex, &u, &f)`: returns the last values applied through BPF.
-  - Registered for STRUCT_OPS, SYSCALL, TRACING and SCHED_CLS. `request` and `get` return
-    `-EBUSY` in NMI context.
-- `cpuidle ext.c`, `ops_check_member`: rejects sleepable programs for `select`, `reflect` and
-  `set_stop_tick`, which run in the idle loop with IRQs off. `cpuidle_gov_ext.c` was switched
-  to `struct_ops/` sections for those three callbacks to match.
-- The tg3 driver-local TC kfuncs from commit `eca9332f3c41` are unchanged; they are an older
-  prototype.
-- No bnxt changes.
+**Booted and verified (build #3, 2026-09-24):** release `6.17.0-rc1-moext-extgovs-napi+`,
+`uname -v` is `#3 SMP PREEMPT_DYNAMIC Thu Sep 24 18:53:23 UTC 2026`.
+- `verify_netdev_coal.sh`: PASS (set/request/get, dedup, rx-usecs 0, tracking of `ethtool -C`,
+  burst, `-ENODEV`, adaptive-rx → `-EBUSY`; rx-frames/CQE mode/link unchanged).
+- `ethtool_equiv.sh`: PASS. `set` and `request` match `ethtool -C IF rx-usecs U` for
+  0/1/50/200/400/1000/2000/4000 (full `ethtool -c`, all 24 firmware messages, 1 NTF), and a
+  request after an ethtool change is applied.
+- `cpufreq_coal_test.sh async` and `sync`: PASS (sync calls `set` from `get_next_freq` in the
+  dbs worker).
+- cpufreq_ext race: register → `rm` link → immediate `echo schedutil` ×3, then register again:
+  no oops, no hang.
 
-**Built:** new code passes `checkpatch.pl` with 0 warnings and has no W=1 warnings. vmlinux BTF
-has the 3 `bpf_netdev_*` kfuncs. `CONFIG_LOCALVERSION` was changed to
-`-v6.17rc1-cstate-extgovs-napi`, so the release is `6.17.0-rc1-v6.17rc1-cstate-extgovs-napi+`.
+The previous build is backed up as
+`/boot/{vmlinuz,initrd.img,System.map,config}-6.17.0-rc1-moext-extgovs-napi+.pre-usecs` and
+`/lib/modules/6.17.0-rc1-moext-extgovs-napi+.pre-usecs` (GRUB has a `.pre-usecs` entry); they
+can be deleted when the user is happy. GRUB is `saved`, hidden menu, timeout 0, saved entry
+= the `-napi+` advanced entry. Fallback via IPMI/serial: 5.15.0-185-generic.
 
-**Installed but not yet booted at the time of writing:** `make modules_install
-INSTALL_MOD_STRIP=1 && make install`. GRUB uses `GRUB_DEFAULT=saved` with a hidden menu and
-timeout 0, and the saved entry is the top-level "Ubuntu" entry, which now points to `-napi+`.
-So a plain reboot boots the new kernel, with no automatic fallback. The previous kernel is
-`6.17.0-rc1-v6.17rc1-cstate-extgovs+` (in GRUB under Advanced options). The user has IPMI and
-serial console (ttyS0) access. **Check `uname -r` first**: if it ends in `-napi+`, the new
-kernel is running.
+**Next steps:**
+1. The live cpuidle test (`cpuidle_ext_coal.o`) has no script; it replaces the idle governor
+   on all CPUs, so ask the user first.
+2. The user moves on to the MOext session (`netdev_coal/MOEXT_PROMPT.md`). Before it, as cc:
+   `sudo install -m755 tools/bpf/bpftool/bpftool /usr/local/sbin/bpftool` and
+   `sudo apt install libbpf-dev`.
 
-**Next steps (after booting `-napi+`):**
-1. `tools/testing/selftests/bpf/netdev_coal/build.sh` builds the BPF objects.
-2. `sudo tools/testing/selftests/bpf/netdev_coal/verify_netdev_coal.sh`: kfuncs present;
-   synchronous set 50/10 on eno1np0 (expect 16 firmware `0x53` sends with `tmr_max=625` and
-   `aggr_int=20`, link up, CQE mode unchanged); request, duplicate and burst behaviour; tg3
-   eno3; error cases (`-ENODEV`, adaptive-rx → `-EBUSY`). It restores the original settings.
-3. `sudo .../cpufreq_coal_test.sh async`, then `sync`. The script switches only cpu0's
-   policy to `ext`, steps mode 0 → 1 → 0, checks frequency and coalescing, and prints
-   PASS/FAIL. The kprobes on static functions (`netdev_apply_rx_coalesce`,
-   `netdev_coal_workfn`) may fail if the compiler inlined them; check
-   `/sys/kernel/tracing/available_filter_functions`.
-4. There is no script yet for the live cpuidle test (`cpuidle_ext_coal.o`). Registering it
-   replaces the idle governor on all CPUs, so ask the user before running it.
-5. Then commit, when the user asks.
+## MOext
 
-## Machine facts
+The experiments are in the MOext repo. **Never modify `/home/cc/MOext`**; the user edits
+MOext only as user `mibna001` (`/home/mibna001/MOext`, on `main`). Read it with `git show` /
+`git archive`, and for mibna001's checkout use `git -c safe.directory=/home/mibna001/MOext`.
+- `main/experiments/vswarm_hotelapp_napi_coalescing/`: the ethtool sweep
+  (`napi_knobs.py`: `ethtool -C IF adaptive-rx off`, then `ethtool -C IF rx-usecs U`;
+  `config.json` `coalesce_ms` 0..4, i.e. rx-usecs 0..4000).
+- Branch `analysis/power-saving-potential` (`036a4dd`, not in main): the old tg3 TC kfunc
+  version. It attached to eno1np0 (bnxt), so `bpf_tg3_set_rx_coalesce` returned `-EINVAL`
+  on every packet and never changed anything. Don't build on it.
 
-- **eno1np0:** bnxt_en, BCM57412 (pre-P5), the **only uplink** (DHCP 10.52.2.129 and the
-  default route). Original coalescing: rx 500/15, tx 28/30, adaptive-rx off, CQE mode on,
-  stats-block-usecs 1000000. 16 combined rings.
-- **eno3 / eno4:** tg3, BCM5720, **no carrier** (no cable), so no traffic is possible. They
-  have 4 RX queues with RSS. eno3's original setting: rx 20/5.
-- **CPUs:** 64, `intel_cpufreq` (`intel_pstate=passive`), per-CPU policies, default
-  governor `schedutil`; `ext` is available.
-- **Kernel config:** `CONFIG_CPU_FREQ_GOV_EXT=y`, `CONFIG_CPU_IDLE_GOV_EXT=y`,
-  `CONFIG_DEBUG_INFO_BTF(_MODULES)=y`. Lockdep and `DEBUG_ATOMIC_SLEEP` are off.
+## Machine facts (moext-baremetal-instance)
+
+- **eno1np0:** bnxt_en, BCM57414, the **only uplink** (DHCP 10.191.130.215, default route).
+  Coalescing as found: rx-usecs 10, rx-frames 15, tx 28/30, adaptive-rx off, CQE mode on,
+  stats-block-usecs 1000000. 24 combined rings, so one change sends 24 firmware messages.
+  eno2np1 is the second port, down.
+- **No tg3 NIC** (no eno3/eno4) on this machine; the tg3 module is not loaded.
+- **CPUs:** 96, `intel_cpufreq` (`intel_pstate=passive`), per-CPU policies, default
+  governor `schedutil`, cpuidle `menu`; `ext` is available for both.
+- **Tools:** clang 14 installed from apt (2026-09-24). No libbpf-dev (`/usr/include/bpf`
+  missing). bpftool v7.7.0 built at `tools/bpf/bpftool/bpftool`; mibna001 can't read
+  `/home/cc`, so copy it (e.g. `/usr/local/sbin`) for the MOext session.
 
 ## Findings to keep
+
+(tg3 findings are from an earlier machine that had BCM5720 ports.)
 
 - **`ethtool -C` on tg3:** `tg3_set_coalesce → __tg3_set_coalesce → tg3_coal_rx_init →
   tg3_write_rx_coalesce_vector` writes MMIO to `HOSTCC_*_VEC1 + q*0x18` (0x3d80 usecs,
   0x3d88 frames). It never sleeps, and it rejects usecs 0 or above 1023 and frames above 255.
 - **`ethtool -C` on bnxt:** `bnxt_set_coalesce → bnxt_hwrm_set_coal` sends
-  `HWRM_RING_CMPL_RING_CFG_AGGINT_PARAMS` (0x53) once per ring (16 on eno1np0). Timer values
+  `HWRM_RING_CMPL_RING_CFG_AGGINT_PARAMS` (0x53) once per ring (24 on eno1np0 here). Timer values
   are in 80 ns units (50 µs → 625). Frames are multiplied by `bufs_per_record` (2). It sleeps
   (`GFP_KERNEL`, `hwrm_cmd_lock` mutex, `usleep_range`; about 2 ms total), so it can't be
   called from TC or idle context. Writing the BAR0 mailbox directly is unsafe because there's
@@ -101,10 +116,15 @@ kernel is running.
 - `/usr/sbin/bpftool` is the Ubuntu wrapper and fails on this kernel. Use
   `tools/bpf/bpftool/bpftool` (v7.7.0).
 - `bpftool struct_ops register OBJ LINK_DIR`: a `.struct_ops.link` registration must be
-  pinned, or it unregisters when bpftool exits. `rm -r LINK_DIR` unregisters it.
+  pinned, or it unregisters when bpftool exits. `rm -r LINK_DIR` unregisters it, but
+  asynchronously: wait until `bpftool struct_ops show name <map>` fails before changing
+  `scaling_governor`.
+- `bpftool prog run` can't run `SEC("syscall")` programs (the kernel rejects `repeat` and
+  `ctx_out`). Use `netdev_coal/netdev_coal_run.py`.
 - **BPF build:** `clang -g -O2 -target bpf -D__TARGET_ARCH_x86 -mcpu=v3 -I
-  tools/testing/selftests/bpf/include -I tools/include/uapi`. Don't add `-I tools/lib`: the
-  in-tree libbpf lacks the generated `bpf_helper_defs.h`. Programs use
+  tools/testing/selftests/bpf/include -I tools/include/uapi -I
+  tools/bpf/bpftool/libbpf/include` (the libbpf headers generated by the bpftool build; the
+  system has none). Don't add `-I tools/lib`: it lacks the generated `bpf_helper_defs.h`. Programs use
   `BPF_NO_KFUNC_PROTOTYPES` and `extern ... __ksym`, against the committed `vmlinux.h`.
 - **Kernel build:** `make -j$(nproc)` takes a long time for a full build. Run it in the
   background.

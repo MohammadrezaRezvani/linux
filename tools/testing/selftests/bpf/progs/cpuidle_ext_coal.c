@@ -4,9 +4,9 @@
  * interrupt coalescing through bpf_netdev_request_rx_coalesce().
  *
  * Idle-state selection is the same as cpuidle_gov_ext.c. In addition, on one
- * "decider" CPU and at most once per interval, the governor asks for "deep"
- * coalescing values when it picked the deepest enabled idle state and
- * "shallow" values otherwise. select() runs with IRQs disabled, so it must
+ * "decider" CPU and at most once per interval, the governor asks for the
+ * "deep" rx-usecs when it picked the deepest enabled idle state and the
+ * "shallow" rx-usecs otherwise. select() runs with IRQs disabled, so it must
  * use the non-sleeping request kfunc; the kernel applies the change from a
  * worker and drops requests that don't change anything.
  *
@@ -34,16 +34,13 @@ char LICENSE[] SEC("license") = "GPL";
 int bpf_cpuidle_ext_gov_update_rating(unsigned int rating) __ksym __weak;
 s64 bpf_cpuidle_ext_gov_latency_req(unsigned int cpu) __ksym __weak;
 s64 bpf_tick_nohz_get_sleep_length(void) __ksym __weak;
-extern int bpf_netdev_request_rx_coalesce(__u32 ifindex, __u32 rx_usecs,
-					  __u32 rx_frames) __ksym;
+extern int bpf_netdev_request_rx_coalesce(__u32 ifindex, __u32 rx_usecs) __ksym;
 
 struct coal_cfg {
 	__u32 ifindex;		/* 0 = don't touch coalescing */
 	__u32 decider_cpu;
 	__u32 shallow_usecs;
-	__u32 shallow_frames;
 	__u32 deep_usecs;
-	__u32 deep_frames;
 	__u64 interval_ns;	/* minimum time between requests */
 };
 
@@ -129,12 +126,10 @@ static void steer_coalescing(struct cpuidle_device *dev, bool deep)
 
 	if (deep)
 		st->last_rc = bpf_netdev_request_rx_coalesce(cfg->ifindex,
-							     cfg->deep_usecs,
-							     cfg->deep_frames);
+							     cfg->deep_usecs);
 	else
 		st->last_rc = bpf_netdev_request_rx_coalesce(cfg->ifindex,
-							     cfg->shallow_usecs,
-							     cfg->shallow_frames);
+							     cfg->shallow_usecs);
 	st->requests++;
 	if (deep)
 		st->deep_requests++;

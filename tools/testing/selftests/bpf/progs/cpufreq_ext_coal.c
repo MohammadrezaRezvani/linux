@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: GPL-2.0
 /*
  * cpufreq_ext_coal.c - cpufreq ext governor that pairs each frequency
- * decision with NIC RX interrupt coalescing.
+ * decision with NIC RX interrupt coalescing (rx-usecs).
  *
  * coal_cfg[0].mode picks a joint operating point:
  *   0 = performance: policy->max,  "fast" coalescing (low latency)
@@ -32,19 +32,15 @@
 
 char LICENSE[] SEC("license") = "GPL";
 
-extern int bpf_netdev_request_rx_coalesce(__u32 ifindex, __u32 rx_usecs,
-					  __u32 rx_frames) __ksym;
-extern int bpf_netdev_set_rx_coalesce(__u32 ifindex, __u32 rx_usecs,
-				      __u32 rx_frames) __ksym __weak;
+extern int bpf_netdev_request_rx_coalesce(__u32 ifindex, __u32 rx_usecs) __ksym;
+extern int bpf_netdev_set_rx_coalesce(__u32 ifindex, __u32 rx_usecs) __ksym __weak;
 
 struct coal_cfg {
 	__u32 ifindex;		/* 0 = don't touch coalescing */
 	__u32 decider_cpu;
 	__u32 mode;		/* 0 = performance, 1 = powersave */
 	__u32 fast_usecs;
-	__u32 fast_frames;
 	__u32 slow_usecs;
-	__u32 slow_frames;
 	__u32 pad;
 	__u64 interval_ns;	/* minimum time between coalescing requests */
 };
@@ -65,8 +61,8 @@ struct coal_stats {
 	__u64 last_freq;
 	__u32 last_mode;
 	__u32 last_usecs;
-	__u32 last_frames;
 	__u32 sync;		/* 1 if built with COAL_SYNC */
+	__u32 pad;
 };
 
 struct {
@@ -92,7 +88,7 @@ unsigned long BPF_PROG(bpf_cpufreq_get_next_freq, struct cpufreq_policy *policy)
 	struct coal_stats *st;
 	struct coal_cfg *cfg;
 	unsigned long freq;
-	u32 key = 0, usecs, frames;
+	u32 key = 0, usecs;
 	u64 now;
 
 	cfg = bpf_map_lookup_elem(&coal_cfg, &key);
@@ -112,20 +108,18 @@ unsigned long BPF_PROG(bpf_cpufreq_get_next_freq, struct cpufreq_policy *policy)
 	st->last_req_ns = now;
 
 	usecs = cfg->mode ? cfg->slow_usecs : cfg->fast_usecs;
-	frames = cfg->mode ? cfg->slow_frames : cfg->fast_frames;
 
 #ifdef COAL_SYNC
-	st->last_rc = bpf_netdev_set_rx_coalesce(cfg->ifindex, usecs, frames);
+	st->last_rc = bpf_netdev_set_rx_coalesce(cfg->ifindex, usecs);
 	st->sync = 1;
 #else
-	st->last_rc = bpf_netdev_request_rx_coalesce(cfg->ifindex, usecs, frames);
+	st->last_rc = bpf_netdev_request_rx_coalesce(cfg->ifindex, usecs);
 	st->sync = 0;
 #endif
 	st->requests++;
 	st->last_freq = freq;
 	st->last_mode = cfg->mode;
 	st->last_usecs = usecs;
-	st->last_frames = frames;
 	return freq;
 }
 

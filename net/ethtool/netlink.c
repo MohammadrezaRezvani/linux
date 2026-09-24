@@ -1074,6 +1074,8 @@ static const ethnl_notify_handler_t ethnl_notify_handlers[] = {
 void ethnl_notify(struct net_device *dev, unsigned int cmd,
 		  const struct ethnl_req_info *req_info)
 {
+	if (cmd == ETHTOOL_MSG_COALESCE_NTF)
+		netdev_coal_sync(dev);
 	if (unlikely(!ethnl_ok))
 		return;
 	ASSERT_RTNL();

@@ -2,3 +2,4 @@
 *.bin
 runs/
 bnxt_runs/
+equiv_out/

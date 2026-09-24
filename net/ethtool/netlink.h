@@ -313,6 +313,12 @@ struct ethnl_reply_data {
 int ethnl_ops_begin(struct net_device *dev);
 void ethnl_ops_complete(struct net_device *dev);
 
+#if IS_ENABLED(CONFIG_BPF_SYSCALL)
+void netdev_coal_sync(struct net_device *dev);
+#else
+static inline void netdev_coal_sync(struct net_device *dev) { }
+#endif
+
 enum ethnl_sock_type {
 	ETHTOOL_SOCK_TYPE_MODULE_FW_FLASH,
 };
