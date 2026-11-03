@@ -9,7 +9,7 @@
  * Author: Raymond Tan <raymond.tan@intel.com>
  */
 
-MODULE_IMPORT_NS(dwc_pwm);
+MODULE_IMPORT_NS("dwc_pwm");
 
 #define DWC_TIM_LD_CNT(n)	((n) * 0x14)
 #define DWC_TIM_LD_CNT2(n)	(((n) * 4) + 0xb0)
@@ -36,6 +36,12 @@ MODULE_IMPORT_NS(dwc_pwm);
 struct dwc_pwm_info {
 	unsigned int nr;
 	unsigned int size;
+};
+
+struct dwc_pwm_drvdata {
+	const struct dwc_pwm_info *info;
+	void __iomem *io_base;
+	struct pwm_chip *chips[];
 };
 
 struct dwc_pwm_ctx {

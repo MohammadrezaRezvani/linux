@@ -4,16 +4,57 @@
 
 #include <linux/netdevice.h>
 
+/**
+ * struct netdev_config - queue-related configuration for a netdev
+ * @hds_thresh:		HDS Threshold value.
+ * @hds_config:		HDS value from userspace.
+ */
+struct netdev_config {
+	u32	hds_thresh;
+	u8	hds_config;
+};
+
 /* See the netdev.yaml spec for definition of each statistic */
 struct netdev_queue_stats_rx {
 	u64 bytes;
 	u64 packets;
 	u64 alloc_fail;
+
+	u64 hw_drops;
+	u64 hw_drop_overruns;
+
+	u64 csum_complete;
+	u64 csum_unnecessary;
+	u64 csum_none;
+	u64 csum_bad;
+
+	u64 hw_gro_packets;
+	u64 hw_gro_bytes;
+	u64 hw_gro_wire_packets;
+	u64 hw_gro_wire_bytes;
+
+	u64 hw_drop_ratelimits;
 };
 
 struct netdev_queue_stats_tx {
 	u64 bytes;
 	u64 packets;
+
+	u64 hw_drops;
+	u64 hw_drop_errors;
+
+	u64 csum_none;
+	u64 needs_csum;
+
+	u64 hw_gso_packets;
+	u64 hw_gso_bytes;
+	u64 hw_gso_wire_packets;
+	u64 hw_gso_wire_bytes;
+
+	u64 hw_drop_ratelimits;
+
+	u64 stop;
+	u64 wake;
 };
 
 /**
@@ -32,6 +73,8 @@ struct netdev_queue_stats_tx {
  * statistics will not generally add up to the total number of events for
  * the device. The @get_base_stats callback allows filling in the delta
  * between events for currently live queues and overall device history.
+ * @get_base_stats can also be used to report any miscellaneous packets
+ * transferred outside of the main set of queues used by the networking stack.
  * When the statistics for the entire device are queried, first @get_base_stats
  * is issued to collect the delta, and then a series of per-queue callbacks.
  * Only statistics which are set in @get_base_stats will be reported
@@ -42,9 +85,11 @@ struct netdev_queue_stats_tx {
  * for some of the events is not maintained, and reliable "total" cannot
  * be provided).
  *
+ * Ops are called under the instance lock if netdev_need_ops_lock()
+ * returns true, otherwise under rtnl_lock.
  * Device drivers can assume that when collecting total device stats,
  * the @get_base_stats and subsequent per-queue calls are performed
- * "atomically" (without releasing the rtnl_lock).
+ * "atomically" (without releasing the relevant lock).
  *
  * Device drivers are encouraged to reset the per-queue statistics when
  * number of queues change. This is because the primary use case for
@@ -58,6 +103,47 @@ struct netdev_stat_ops {
 	void (*get_base_stats)(struct net_device *dev,
 			       struct netdev_queue_stats_rx *rx,
 			       struct netdev_queue_stats_tx *tx);
+};
+
+void netdev_stat_queue_sum(struct net_device *netdev,
+			   int rx_start, int rx_end,
+			   struct netdev_queue_stats_rx *rx_sum,
+			   int tx_start, int tx_end,
+			   struct netdev_queue_stats_tx *tx_sum);
+
+/**
+ * struct netdev_queue_mgmt_ops - netdev ops for queue management
+ *
+ * @ndo_queue_mem_size: Size of the struct that describes a queue's memory.
+ *
+ * @ndo_queue_mem_alloc: Allocate memory for an RX queue at the specified index.
+ *			 The new memory is written at the specified address.
+ *
+ * @ndo_queue_mem_free:	Free memory from an RX queue.
+ *
+ * @ndo_queue_start:	Start an RX queue with the specified memory and at the
+ *			specified index.
+ *
+ * @ndo_queue_stop:	Stop the RX queue at the specified index. The stopped
+ *			queue's memory is written at the specified address.
+ *
+ * Note that @ndo_queue_mem_alloc and @ndo_queue_mem_free may be called while
+ * the interface is closed. @ndo_queue_start and @ndo_queue_stop will only
+ * be called for an interface which is open.
+ */
+struct netdev_queue_mgmt_ops {
+	size_t			ndo_queue_mem_size;
+	int			(*ndo_queue_mem_alloc)(struct net_device *dev,
+						       void *per_queue_mem,
+						       int idx);
+	void			(*ndo_queue_mem_free)(struct net_device *dev,
+						      void *per_queue_mem);
+	int			(*ndo_queue_start)(struct net_device *dev,
+						   void *per_queue_mem,
+						   int idx);
+	int			(*ndo_queue_stop)(struct net_device *dev,
+						  void *per_queue_mem,
+						  int idx);
 };
 
 /**
@@ -202,27 +288,36 @@ netdev_txq_completed_mb(struct netdev_queue *dev_queue,
 
 #define netif_subqueue_try_stop(dev, idx, get_desc, start_thrs)		\
 	({								\
-		struct netdev_queue *txq;				\
+		struct netdev_queue *_txq;				\
 									\
-		txq = netdev_get_tx_queue(dev, idx);			\
-		netif_txq_try_stop(txq, get_desc, start_thrs);		\
+		_txq = netdev_get_tx_queue(dev, idx);			\
+		netif_txq_try_stop(_txq, get_desc, start_thrs);		\
 	})
+
+static inline void netif_subqueue_sent(const struct net_device *dev,
+				       unsigned int idx, unsigned int bytes)
+{
+	struct netdev_queue *txq;
+
+	txq = netdev_get_tx_queue(dev, idx);
+	netdev_tx_sent_queue(txq, bytes);
+}
 
 #define netif_subqueue_maybe_stop(dev, idx, get_desc, stop_thrs, start_thrs) \
 	({								\
-		struct netdev_queue *txq;				\
+		struct netdev_queue *_txq;				\
 									\
-		txq = netdev_get_tx_queue(dev, idx);			\
-		netif_txq_maybe_stop(txq, get_desc, stop_thrs, start_thrs); \
+		_txq = netdev_get_tx_queue(dev, idx);			\
+		netif_txq_maybe_stop(_txq, get_desc, stop_thrs, start_thrs); \
 	})
 
 #define netif_subqueue_completed_wake(dev, idx, pkts, bytes,		\
 				      get_desc, start_thrs)		\
 	({								\
-		struct netdev_queue *txq;				\
+		struct netdev_queue *_txq;				\
 									\
-		txq = netdev_get_tx_queue(dev, idx);			\
-		netif_txq_completed_wake(txq, pkts, bytes,		\
+		_txq = netdev_get_tx_queue(dev, idx);			\
+		netif_txq_completed_wake(_txq, pkts, bytes,		\
 					 get_desc, start_thrs);		\
 	})
 

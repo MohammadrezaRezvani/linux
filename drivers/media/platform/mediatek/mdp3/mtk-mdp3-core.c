@@ -21,6 +21,9 @@ static const struct of_device_id mdp_of_ids[] = {
 	{ .compatible = "mediatek,mt8183-mdp3-rdma",
 	  .data = &mt8183_mdp_driver_data,
 	},
+	{ .compatible = "mediatek,mt8188-mdp3-rdma",
+	  .data = &mt8188_mdp_driver_data,
+	},
 	{ .compatible = "mediatek,mt8195-mdp3-rdma",
 	  .data = &mt8195_mdp_driver_data,
 	},
@@ -75,25 +78,6 @@ static struct platform_device *__get_pdev_by_id(struct platform_device *pdev,
 
 	return mdp_pdev;
 }
-
-struct platform_device *mdp_get_plat_device(struct platform_device *pdev)
-{
-	struct device *dev = &pdev->dev;
-	struct device_node *mdp_node;
-	struct platform_device *mdp_pdev;
-
-	mdp_node = of_parse_phandle(dev->of_node, MDP_PHANDLE_NAME, 0);
-	if (!mdp_node) {
-		dev_err(dev, "can't get node %s\n", MDP_PHANDLE_NAME);
-		return NULL;
-	}
-
-	mdp_pdev = of_find_device_by_node(mdp_node);
-	of_node_put(mdp_node);
-
-	return mdp_pdev;
-}
-EXPORT_SYMBOL_GPL(mdp_get_plat_device);
 
 int mdp_vpu_get_locked(struct mdp_dev *mdp)
 {
@@ -309,6 +293,8 @@ static int mdp_probe(struct platform_device *pdev)
 			ret = PTR_ERR(mdp->cmdq_clt[i]);
 			goto err_mbox_destroy;
 		}
+
+		mdp->cmdq_shift_pa[i] = cmdq_get_shift_pa(mdp->cmdq_clt[i]->chan);
 	}
 
 	init_waitqueue_head(&mdp->callback_wq);
@@ -380,14 +366,14 @@ static int __maybe_unused mdp_suspend(struct device *dev)
 
 	atomic_set(&mdp->suspended, 1);
 
-	if (atomic_read(&mdp->job_count)) {
+	if (refcount_read(&mdp->job_count)) {
 		ret = wait_event_timeout(mdp->callback_wq,
-					 !atomic_read(&mdp->job_count),
+					 !refcount_read(&mdp->job_count),
 					 2 * HZ);
 		if (ret == 0) {
 			dev_err(dev,
 				"%s:flushed cmdq task incomplete, count=%d\n",
-				__func__, atomic_read(&mdp->job_count));
+				__func__, refcount_read(&mdp->job_count));
 			return -EBUSY;
 		}
 	}
@@ -410,7 +396,7 @@ static const struct dev_pm_ops mdp_pm_ops = {
 
 static struct platform_driver mdp_driver = {
 	.probe		= mdp_probe,
-	.remove_new	= mdp_remove,
+	.remove		= mdp_remove,
 	.driver = {
 		.name	= MDP_MODULE_NAME,
 		.pm	= &mdp_pm_ops,

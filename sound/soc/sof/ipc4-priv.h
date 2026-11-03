@@ -3,7 +3,7 @@
  * This file is provided under a dual BSD/GPLv2 license.  When using or
  * redistributing this file, you may do so under either license.
  *
- * Copyright(c) 2022 Intel Corporation. All rights reserved.
+ * Copyright(c) 2022 Intel Corporation
  */
 
 #ifndef __SOUND_SOC_SOF_IPC4_PRIV_H
@@ -11,6 +11,7 @@
 
 #include <linux/idr.h>
 #include <sound/sof/ext_manifest4.h>
+#include <sound/sof/ipc4/header.h>
 #include "sof-priv.h"
 
 /* The DSP window indices are fixed */
@@ -71,6 +72,8 @@ struct sof_ipc4_fw_library {
  * @max_num_pipelines: max number of pipelines
  * @max_libs_count: Maximum number of libraries support by the FW including the
  *		    base firmware
+ * @fw_context_save: Firmware supports full context save and restore
+ * @libraries_restored: The libraries have been retained during firmware boot
  *
  * @load_library: Callback function for platform dependent library loading
  * @pipeline_state_mutex: Mutex to protect pipeline triggers, ref counts, states and deletion
@@ -86,24 +89,13 @@ struct sof_ipc4_fw_data {
 	int max_num_pipelines;
 	u32 max_libs_count;
 	bool fw_context_save;
+	bool libraries_restored;
 
 	int (*load_library)(struct snd_sof_dev *sdev,
 			    struct sof_ipc4_fw_library *fw_lib, bool reload);
+	void (*intel_configure_mic_privacy)(struct snd_sof_dev *sdev,
+					    struct sof_ipc4_intel_mic_privacy_cap *caps);
 	struct mutex pipeline_state_mutex; /* protect pipeline triggers, ref counts and states */
-};
-
-/**
- * struct sof_ipc4_timestamp_info - IPC4 timestamp info
- * @host_copier: the host copier of the pcm stream
- * @dai_copier: the dai copier of the pcm stream
- * @stream_start_offset: reported by fw in memory window
- * @llp_offset: llp offset in memory window
- */
-struct sof_ipc4_timestamp_info {
-	struct sof_ipc4_copier *host_copier;
-	struct sof_ipc4_copier *dai_copier;
-	u64 stream_start_offset;
-	u32 llp_offset;
 };
 
 extern const struct sof_ipc_fw_loader_ops ipc4_loader_ops;
@@ -112,9 +104,10 @@ extern const struct sof_ipc_tplg_control_ops tplg_ipc4_control_ops;
 extern const struct sof_ipc_pcm_ops ipc4_pcm_ops;
 extern const struct sof_ipc_fw_tracing_ops ipc4_mtrace_ops;
 
-int sof_ipc4_set_pipeline_state(struct snd_sof_dev *sdev, u32 id, u32 state);
+int sof_ipc4_set_pipeline_state(struct snd_sof_dev *sdev, u32 instance_id, u32 state);
 int sof_ipc4_mtrace_update_pos(struct snd_sof_dev *sdev, int core);
 
+int sof_ipc4_complete_split_release(struct snd_sof_dev *sdev);
 int sof_ipc4_query_fw_configuration(struct snd_sof_dev *sdev);
 int sof_ipc4_reload_fw_libraries(struct snd_sof_dev *sdev);
 struct sof_ipc4_fw_module *sof_ipc4_find_module_by_uuid(struct snd_sof_dev *sdev,
@@ -130,5 +123,10 @@ void sof_ipc4_update_cpc_from_manifest(struct snd_sof_dev *sdev,
 
 size_t sof_ipc4_find_debug_slot_offset_by_type(struct snd_sof_dev *sdev,
 					       u32 slot_type);
+
+void sof_ipc4_mic_privacy_state_change(struct snd_sof_dev *sdev, bool state);
+
+enum sof_ipc4_pipeline_state;
+const char *sof_ipc4_pipeline_state_str(enum sof_ipc4_pipeline_state state);
 
 #endif

@@ -30,7 +30,31 @@ struct mbt_ext4_super_block {
 #define MBT_CTX(_sb) (&MBT_SB(_sb)->mbt_ctx)
 #define MBT_GRP_CTX(_sb, _group) (&MBT_CTX(_sb)->grp_ctx[_group])
 
+static struct inode *mbt_alloc_inode(struct super_block *sb)
+{
+	struct ext4_inode_info *ei;
+
+	ei = kmalloc(sizeof(struct ext4_inode_info), GFP_KERNEL);
+	if (!ei)
+		return NULL;
+
+	INIT_LIST_HEAD(&ei->i_orphan);
+	init_rwsem(&ei->xattr_sem);
+	init_rwsem(&ei->i_data_sem);
+	inode_init_once(&ei->vfs_inode);
+	ext4_fc_init_inode(&ei->vfs_inode);
+
+	return &ei->vfs_inode;
+}
+
+static void mbt_free_inode(struct inode *inode)
+{
+	kfree(EXT4_I(inode));
+}
+
 static const struct super_operations mbt_sops = {
+	.alloc_inode	= mbt_alloc_inode,
+	.free_inode	= mbt_free_inode,
 };
 
 static void mbt_kill_sb(struct super_block *sb)
@@ -131,6 +155,7 @@ static struct super_block *mbt_ext4_alloc_super_block(void)
 	bgl_lock_init(sbi->s_blockgroup_lock);
 
 	sbi->s_es = &fsb->es;
+	sbi->s_sb = sb;
 	sb->s_fs_info = sbi;
 
 	up_write(&sb->s_umount);
@@ -772,11 +797,14 @@ static void test_mb_mark_used(struct kunit *test)
 	KUNIT_ASSERT_NOT_ERR_OR_NULL(test, buddy);
 	grp = kunit_kzalloc(test, offsetof(struct ext4_group_info,
 				bb_counters[MB_NUM_ORDERS(sb)]), GFP_KERNEL);
+	KUNIT_ASSERT_NOT_ERR_OR_NULL(test, grp);
 
 	ret = ext4_mb_load_buddy(sb, TEST_GOAL_GROUP, &e4b);
 	KUNIT_ASSERT_EQ(test, ret, 0);
 
 	grp->bb_free = EXT4_CLUSTERS_PER_GROUP(sb);
+	grp->bb_largest_free_order = -1;
+	grp->bb_avg_fragment_size_order = -1;
 	mbt_generate_test_ranges(sb, ranges, TEST_RANGE_COUNT);
 	for (i = 0; i < TEST_RANGE_COUNT; i++)
 		test_mb_mark_used_range(test, &e4b, ranges[i].start,
@@ -836,6 +864,7 @@ static void test_mb_free_blocks(struct kunit *test)
 	KUNIT_ASSERT_NOT_ERR_OR_NULL(test, buddy);
 	grp = kunit_kzalloc(test, offsetof(struct ext4_group_info,
 				bb_counters[MB_NUM_ORDERS(sb)]), GFP_KERNEL);
+	KUNIT_ASSERT_NOT_ERR_OR_NULL(test, grp);
 
 	ret = ext4_mb_load_buddy(sb, TEST_GOAL_GROUP, &e4b);
 	KUNIT_ASSERT_EQ(test, ret, 0);
@@ -849,6 +878,8 @@ static void test_mb_free_blocks(struct kunit *test)
 	ext4_unlock_group(sb, TEST_GOAL_GROUP);
 
 	grp->bb_free = 0;
+	grp->bb_largest_free_order = -1;
+	grp->bb_avg_fragment_size_order = -1;
 	memset(bitmap, 0xff, sb->s_blocksize);
 
 	mbt_generate_test_ranges(sb, ranges, TEST_RANGE_COUNT);
@@ -856,6 +887,56 @@ static void test_mb_free_blocks(struct kunit *test)
 		test_mb_free_blocks_range(test, &e4b, ranges[i].start,
 					  ranges[i].len, bitmap, buddy, grp);
 
+	ext4_mb_unload_buddy(&e4b);
+}
+
+#define COUNT_FOR_ESTIMATE 100000
+static void test_mb_mark_used_cost(struct kunit *test)
+{
+	struct ext4_buddy e4b;
+	struct super_block *sb = (struct super_block *)test->priv;
+	struct ext4_free_extent ex;
+	int ret;
+	struct test_range ranges[TEST_RANGE_COUNT];
+	int i, j;
+	unsigned long start, end, all = 0;
+
+	/* buddy cache assumes that each page contains at least one block */
+	if (sb->s_blocksize > PAGE_SIZE)
+		kunit_skip(test, "blocksize exceeds pagesize");
+
+	ret = ext4_mb_load_buddy(sb, TEST_GOAL_GROUP, &e4b);
+	KUNIT_ASSERT_EQ(test, ret, 0);
+
+	ex.fe_group = TEST_GOAL_GROUP;
+	for (j = 0; j < COUNT_FOR_ESTIMATE; j++) {
+		mbt_generate_test_ranges(sb, ranges, TEST_RANGE_COUNT);
+		start = jiffies;
+		for (i = 0; i < TEST_RANGE_COUNT; i++) {
+			if (ranges[i].len == 0)
+				continue;
+
+			ex.fe_start = ranges[i].start;
+			ex.fe_len = ranges[i].len;
+			ext4_lock_group(sb, TEST_GOAL_GROUP);
+			mb_mark_used(&e4b, &ex);
+			ext4_unlock_group(sb, TEST_GOAL_GROUP);
+		}
+		end = jiffies;
+		all += (end - start);
+
+		for (i = 0; i < TEST_RANGE_COUNT; i++) {
+			if (ranges[i].len == 0)
+				continue;
+
+			ext4_lock_group(sb, TEST_GOAL_GROUP);
+			mb_free_blocks(NULL, &e4b, ranges[i].start,
+				       ranges[i].len);
+			ext4_unlock_group(sb, TEST_GOAL_GROUP);
+		}
+	}
+
+	kunit_info(test, "costed jiffies %lu\n", all);
 	ext4_mb_unload_buddy(&e4b);
 }
 
@@ -901,6 +982,8 @@ static struct kunit_case mbt_test_cases[] = {
 	KUNIT_CASE_PARAM(test_mb_mark_used, mbt_layouts_gen_params),
 	KUNIT_CASE_PARAM(test_mb_free_blocks, mbt_layouts_gen_params),
 	KUNIT_CASE_PARAM(test_mark_diskspace_used, mbt_layouts_gen_params),
+	KUNIT_CASE_PARAM_ATTR(test_mb_mark_used_cost, mbt_layouts_gen_params,
+			      { .speed = KUNIT_SPEED_SLOW }),
 	{}
 };
 

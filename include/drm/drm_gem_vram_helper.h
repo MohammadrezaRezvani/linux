@@ -17,7 +17,6 @@
 struct drm_mode_create_dumb;
 struct drm_plane;
 struct drm_plane_state;
-struct drm_simple_display_pipe;
 struct filp;
 struct vm_area_struct;
 
@@ -95,8 +94,6 @@ struct drm_gem_vram_object *drm_gem_vram_create(struct drm_device *dev,
 						unsigned long pg_align);
 void drm_gem_vram_put(struct drm_gem_vram_object *gbo);
 s64 drm_gem_vram_offset(struct drm_gem_vram_object *gbo);
-int drm_gem_vram_pin(struct drm_gem_vram_object *gbo, unsigned long pl_flag);
-int drm_gem_vram_unpin(struct drm_gem_vram_object *gbo);
 int drm_gem_vram_vmap(struct drm_gem_vram_object *gbo, struct iosys_map *map);
 void drm_gem_vram_vunmap(struct drm_gem_vram_object *gbo,
 			 struct iosys_map *map);
@@ -137,18 +134,6 @@ drm_gem_vram_plane_helper_cleanup_fb(struct drm_plane *plane,
 	.prepare_fb = drm_gem_vram_plane_helper_prepare_fb, \
 	.cleanup_fb = drm_gem_vram_plane_helper_cleanup_fb
 
-/*
- * Helpers for struct drm_simple_display_pipe_funcs
- */
-
-int drm_gem_vram_simple_display_pipe_prepare_fb(
-	struct drm_simple_display_pipe *pipe,
-	struct drm_plane_state *new_state);
-
-void drm_gem_vram_simple_display_pipe_cleanup_fb(
-	struct drm_simple_display_pipe *pipe,
-	struct drm_plane_state *old_state);
-
 /**
  * define DRM_GEM_VRAM_DRIVER - default callback functions for
  *				&struct drm_driver
@@ -170,7 +155,6 @@ void drm_gem_vram_simple_display_pipe_cleanup_fb(
  * @vram_base:	Base address of the managed video memory
  * @vram_size:	Size of the managed video memory in bytes
  * @bdev:	The TTM BO device.
- * @funcs:	TTM BO functions
  *
  * The fields &struct drm_vram_mm.vram_base and
  * &struct drm_vram_mm.vrm_size are managed by VRAM MM, but are

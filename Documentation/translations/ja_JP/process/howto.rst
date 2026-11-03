@@ -1,34 +1,17 @@
-.. raw:: latex
+.. SPDX-License-Identifier: GPL-2.0
 
-	\kerneldocCJKoff
-
-NOTE:
-This is a version of Documentation/process/howto.rst translated into Japanese.
-This document is maintained by Tsugikazu Shibata <tshibata@ab.jp.nec.com>
-If you find any difference between this document and the original file or
-a problem with the translation, please contact the maintainer of this file.
-
-Please also note that the purpose of this file is to be easier to
-read for non English (read: Japanese) speakers and is not intended as
-a fork. So if you have any comments or updates for this file, please
-try to update the original English file first.
-
-----------------------------------
-
-.. raw:: latex
-
-	\kerneldocCJKon
-
-この文書は、
-Documentation/process/howto.rst
-の和訳です。
-
-翻訳者： Tsugikazu Shibata <tshibata@ab.jp.nec.com>
-
-----------------------------------
+.. Originally contributed by Tsugikazu Shibata
 
 Linux カーネル開発のやり方
 ==========================
+
+.. note:: 【訳註】
+   この文書は、
+   Documentation/process/howto.rst
+   の翻訳です。
+   免責条項については、
+   :ref:`免責条項の抄訳 <translations_ja_JP_disclaimer>` および、
+   :ref:`Disclaimer (英語版) <translations_disclaimer>` を参照してください。
 
 これは上のトピック( Linux カーネル開発のやり方)の重要な事柄を網羅した
 ドキュメントです。ここには Linux カーネル開発者になるための方法とLinux
@@ -110,7 +93,7 @@ Linux カーネルソースツリーは幅広い範囲のドキュメントを�
 新しいドキュメントファイルも追加することを勧めます。
 カーネルの変更が、カーネルがユーザ空間に公開しているインターフェイスの
 変更を引き起こす場合、その変更を説明するマニュアルページのパッチや情報
-をマニュアルページのメンテナ mtk.manpages@gmail.com に送り、CC を
+をマニュアルページのメンテナ alx@kernel.org に送り、CC を
 linux-api@vger.kernel.org に送ることを勧めます。
 
 以下はカーネルソースツリーに含まれている読んでおくべきファイルの一覧で
@@ -361,7 +344,7 @@ https://patchwork.kernel.org/ でリストされています。
 全サブシステムツリーからほぼ毎日プルされてできる特別なテスト用のリポジ
 トリが存在します-
 
-       https://git.kernel.org/?p=linux/kernel/git/next/linux-next.git
+       https://git.kernel.org/pub/scm/linux/kernel/git/next/linux-next.git
 
 このやり方によって、linux-next は次のマージ機会でどんなものがメイン
 ラインにマージされるか、おおまかな展望を提供します。
@@ -401,12 +384,12 @@ https://bugzilla.kernel.org でバグ報告を調べようとする人もいる�
 は Linux kernel メーリングリストに参加しています。このリストの登録/脱
 退の方法については以下を参照してください-
 
-	http://vger.kernel.org/vger-lists.html#linux-kernel
+	https://subspace.kernel.org/subscribing.html
 
 このメーリングリストのアーカイブは web 上の多数の場所に存在します。こ
 れらのアーカイブを探すにはサーチエンジンを使いましょう。例えば-
 
-	https://lore.kernel.org/lkml/
+	https://lore.kernel.org/linux-kernel/
 
 リストに投稿する前にすでにその話題がアーカイブに存在するかどうかを検索
 することを是非やってください。多数の事がすでに詳細に渡って議論されてお
@@ -419,13 +402,13 @@ MAINTAINERS ファイルにリストがありますので参照してくださ�
 多くのリストは kernel.org でホストされています。これらの情報は以下にあ
 ります -
 
-	http://vger.kernel.org/vger-lists.html
+	https://subspace.kernel.org
 
 メーリングリストを使う場合、良い行動習慣に従うようにしましょう。少し安っ
 ぽいが、以下の URL は上のリスト(や他のリスト)で会話する場合のシンプル
 なガイドラインを示しています -
 
-	http://www.albion.com/netiquette/
+	https://subspace.kernel.org/etiquette.html
 
 もし複数の人があなたのメールに返事をした場合、CC: で受ける人のリストは
 だいぶ多くなるでしょう。正当な理由がない限り、CC: リストから誰かを削除

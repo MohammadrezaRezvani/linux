@@ -53,6 +53,7 @@ static ssize_t i40e_dbg_command_read(struct file *filp, char __user *buffer,
 				     size_t count, loff_t *ppos)
 {
 	struct i40e_pf *pf = filp->private_data;
+	struct i40e_vsi *main_vsi;
 	int bytes_not_copied;
 	int buf_size = 256;
 	char *buf;
@@ -68,8 +69,8 @@ static ssize_t i40e_dbg_command_read(struct file *filp, char __user *buffer,
 	if (!buf)
 		return -ENOSPC;
 
-	len = snprintf(buf, buf_size, "%s: %s\n",
-		       pf->vsi[pf->lan_vsi]->netdev->name,
+	main_vsi = i40e_pf_get_main_vsi(pf);
+	len = snprintf(buf, buf_size, "%s: %s\n", main_vsi->netdev->name,
 		       i40e_dbg_command_buf);
 
 	bytes_not_copied = copy_to_user(buffer, buf, len);
@@ -88,6 +89,7 @@ static char *i40e_filter_state_string[] = {
 	"ACTIVE",
 	"FAILED",
 	"REMOVE",
+	"NEW_SYNC",
 };
 
 /**
@@ -128,7 +130,7 @@ static void i40e_dbg_dump_vsi_seid(struct i40e_pf *pf, int seid)
 		dev_info(&pf->pdev->dev,
 			 "    state[%d] = %08lx\n",
 			 i, vsi->state[i]);
-	if (vsi == pf->vsi[pf->lan_vsi])
+	if (vsi->type == I40E_VSI_MAIN)
 		dev_info(&pf->pdev->dev, "    MAC address: %pM Port MAC: %pM\n",
 			 pf->hw.mac.addr,
 			 pf->hw.mac.port_addr);
@@ -487,7 +489,7 @@ static void i40e_dbg_dump_aq_desc(struct i40e_pf *pf)
 	dev_info(&pf->pdev->dev, "AdminQ Tx Ring\n");
 	ring = &(hw->aq.asq);
 	for (i = 0; i < ring->count; i++) {
-		struct i40e_aq_desc *d = I40E_ADMINQ_DESC(*ring, i);
+		struct libie_aq_desc *d = I40E_ADMINQ_DESC(*ring, i);
 
 		dev_info(&pf->pdev->dev,
 			 "   at[%02d] flags=0x%04x op=0x%04x dlen=0x%04x ret=0x%04x cookie_h=0x%08x cookie_l=0x%08x\n",
@@ -500,7 +502,7 @@ static void i40e_dbg_dump_aq_desc(struct i40e_pf *pf)
 	dev_info(&pf->pdev->dev, "AdminQ Rx Ring\n");
 	ring = &(hw->aq.arq);
 	for (i = 0; i < ring->count; i++) {
-		struct i40e_aq_desc *d = I40E_ADMINQ_DESC(*ring, i);
+		struct libie_aq_desc *d = I40E_ADMINQ_DESC(*ring, i);
 
 		dev_info(&pf->pdev->dev,
 			 "   ar[%02d] flags=0x%04x op=0x%04x dlen=0x%04x ret=0x%04x cookie_h=0x%08x cookie_l=0x%08x\n",
@@ -720,7 +722,7 @@ static void i40e_dbg_dump_vf(struct i40e_pf *pf, int vf_id)
 		dev_info(&pf->pdev->dev, "vf %2d: VSI id=%d, seid=%d, qps=%d\n",
 			 vf_id, vf->lan_vsi_id, vsi->seid, vf->num_queue_pairs);
 		dev_info(&pf->pdev->dev, "       num MDD=%lld\n",
-			 vf->num_mdd_events);
+			 vf->mdd_tx_events.count + vf->mdd_rx_events.count);
 	} else {
 		dev_info(&pf->pdev->dev, "invalid VF id %d\n", vf_id);
 	}
@@ -786,7 +788,8 @@ static ssize_t i40e_dbg_command_write(struct file *filp,
 		cnt = sscanf(&cmd_buf[7], "%i", &vsi_seid);
 		if (cnt == 0) {
 			/* default to PF VSI */
-			vsi_seid = pf->vsi[pf->lan_vsi]->seid;
+			vsi = i40e_pf_get_main_vsi(pf);
+			vsi_seid = vsi->seid;
 		} else if (vsi_seid < 0) {
 			dev_info(&pf->pdev->dev, "add VSI %d: bad vsi seid\n",
 				 vsi_seid);
@@ -867,7 +870,7 @@ static ssize_t i40e_dbg_command_write(struct file *filp,
 			goto command_write_done;
 		}
 
-		veb = i40e_veb_setup(pf, 0, uplink_seid, vsi_seid, enabled_tc);
+		veb = i40e_veb_setup(pf, uplink_seid, vsi_seid, enabled_tc);
 		if (veb)
 			dev_info(&pf->pdev->dev, "added relay %d\n", veb->seid);
 		else
@@ -1030,7 +1033,7 @@ static ssize_t i40e_dbg_command_write(struct file *filp,
 				goto command_write_done;
 			}
 
-			vsi = pf->vsi[pf->lan_vsi];
+			vsi = i40e_pf_get_main_vsi(pf);
 			switch_id =
 				le16_to_cpu(vsi->info.switch_id) &
 					    I40E_AQ_VSI_SW_ID_MASK;
@@ -1265,10 +1268,10 @@ static ssize_t i40e_dbg_command_write(struct file *filp,
 			dev_info(&pf->pdev->dev, "clear_stats vsi [seid] or clear_stats port\n");
 		}
 	} else if (strncmp(cmd_buf, "send aq_cmd", 11) == 0) {
-		struct i40e_aq_desc *desc;
+		struct libie_aq_desc *desc;
 		int ret;
 
-		desc = kzalloc(sizeof(struct i40e_aq_desc), GFP_KERNEL);
+		desc = kzalloc(sizeof(*desc), GFP_KERNEL);
 		if (!desc)
 			goto command_write_done;
 		cnt = sscanf(&cmd_buf[11],
@@ -1276,10 +1279,10 @@ static ssize_t i40e_dbg_command_write(struct file *filp,
 			     &desc->flags,
 			     &desc->opcode, &desc->datalen, &desc->retval,
 			     &desc->cookie_high, &desc->cookie_low,
-			     &desc->params.internal.param0,
-			     &desc->params.internal.param1,
-			     &desc->params.internal.param2,
-			     &desc->params.internal.param3);
+			     &desc->params.generic.param0,
+			     &desc->params.generic.param1,
+			     &desc->params.generic.addr_high,
+			     &desc->params.generic.addr_low);
 		if (cnt != 10) {
 			dev_info(&pf->pdev->dev,
 				 "send aq_cmd: bad command string, cnt=%d\n",
@@ -1304,19 +1307,19 @@ static ssize_t i40e_dbg_command_write(struct file *filp,
 			 "AQ desc WB 0x%04x 0x%04x 0x%04x 0x%04x 0x%08x 0x%08x 0x%08x 0x%08x 0x%08x 0x%08x\n",
 			 desc->flags, desc->opcode, desc->datalen, desc->retval,
 			 desc->cookie_high, desc->cookie_low,
-			 desc->params.internal.param0,
-			 desc->params.internal.param1,
-			 desc->params.internal.param2,
-			 desc->params.internal.param3);
+			 desc->params.generic.param0,
+			 desc->params.generic.param1,
+			 desc->params.generic.addr_high,
+			 desc->params.generic.addr_low);
 		kfree(desc);
 		desc = NULL;
 	} else if (strncmp(cmd_buf, "send indirect aq_cmd", 20) == 0) {
-		struct i40e_aq_desc *desc;
+		struct libie_aq_desc *desc;
 		u16 buffer_len;
 		u8 *buff;
 		int ret;
 
-		desc = kzalloc(sizeof(struct i40e_aq_desc), GFP_KERNEL);
+		desc = kzalloc(sizeof(*desc), GFP_KERNEL);
 		if (!desc)
 			goto command_write_done;
 		cnt = sscanf(&cmd_buf[20],
@@ -1324,10 +1327,10 @@ static ssize_t i40e_dbg_command_write(struct file *filp,
 			     &desc->flags,
 			     &desc->opcode, &desc->datalen, &desc->retval,
 			     &desc->cookie_high, &desc->cookie_low,
-			     &desc->params.internal.param0,
-			     &desc->params.internal.param1,
-			     &desc->params.internal.param2,
-			     &desc->params.internal.param3,
+			     &desc->params.generic.param0,
+			     &desc->params.generic.param1,
+			     &desc->params.generic.addr_high,
+			     &desc->params.generic.addr_low,
 			     &buffer_len);
 		if (cnt != 11) {
 			dev_info(&pf->pdev->dev,
@@ -1347,7 +1350,7 @@ static ssize_t i40e_dbg_command_write(struct file *filp,
 			desc = NULL;
 			goto command_write_done;
 		}
-		desc->flags |= cpu_to_le16((u16)I40E_AQ_FLAG_BUF);
+		desc->flags |= cpu_to_le16((u16)LIBIE_AQ_FLAG_BUF);
 		ret = i40e_asq_send_command(&pf->hw, desc, buff,
 					    buffer_len, NULL);
 		if (!ret) {
@@ -1365,10 +1368,10 @@ static ssize_t i40e_dbg_command_write(struct file *filp,
 			 "AQ desc WB 0x%04x 0x%04x 0x%04x 0x%04x 0x%08x 0x%08x 0x%08x 0x%08x 0x%08x 0x%08x\n",
 			 desc->flags, desc->opcode, desc->datalen, desc->retval,
 			 desc->cookie_high, desc->cookie_low,
-			 desc->params.internal.param0,
-			 desc->params.internal.param1,
-			 desc->params.internal.param2,
-			 desc->params.internal.param3);
+			 desc->params.generic.param0,
+			 desc->params.generic.param1,
+			 desc->params.generic.addr_high,
+			 desc->params.generic.addr_low);
 		print_hex_dump(KERN_INFO, "AQ buffer WB: ",
 			       DUMP_PREFIX_OFFSET, 16, 1,
 			       buff, buffer_len, true);
@@ -1380,6 +1383,9 @@ static ssize_t i40e_dbg_command_write(struct file *filp,
 		dev_info(&pf->pdev->dev, "FD current total filter count for this interface: %d\n",
 			 i40e_get_current_fd_count(pf));
 	} else if (strncmp(cmd_buf, "lldp", 4) == 0) {
+		/* Get main VSI */
+		struct i40e_vsi *main_vsi = i40e_pf_get_main_vsi(pf);
+
 		if (strncmp(&cmd_buf[5], "stop", 4) == 0) {
 			int ret;
 
@@ -1391,10 +1397,9 @@ static ssize_t i40e_dbg_command_write(struct file *filp,
 				goto command_write_done;
 			}
 			ret = i40e_aq_add_rem_control_packet_filter(&pf->hw,
-						pf->hw.mac.addr,
-						ETH_P_LLDP, 0,
-						pf->vsi[pf->lan_vsi]->seid,
-						0, true, NULL, NULL);
+						pf->hw.mac.addr, ETH_P_LLDP, 0,
+						main_vsi->seid, 0, true, NULL,
+						NULL);
 			if (ret) {
 				dev_info(&pf->pdev->dev,
 					"%s: Add Control Packet Filter AQ command failed =0x%x\n",
@@ -1409,10 +1414,9 @@ static ssize_t i40e_dbg_command_write(struct file *filp,
 			int ret;
 
 			ret = i40e_aq_add_rem_control_packet_filter(&pf->hw,
-						pf->hw.mac.addr,
-						ETH_P_LLDP, 0,
-						pf->vsi[pf->lan_vsi]->seid,
-						0, false, NULL, NULL);
+						pf->hw.mac.addr, ETH_P_LLDP, 0,
+						main_vsi->seid, 0, false, NULL,
+						NULL);
 			if (ret) {
 				dev_info(&pf->pdev->dev,
 					"%s: Remove Control Packet Filter AQ command failed =0x%x\n",
@@ -1639,6 +1643,7 @@ static ssize_t i40e_dbg_netdev_ops_read(struct file *filp, char __user *buffer,
 					size_t count, loff_t *ppos)
 {
 	struct i40e_pf *pf = filp->private_data;
+	struct i40e_vsi *main_vsi;
 	int bytes_not_copied;
 	int buf_size = 256;
 	char *buf;
@@ -1654,8 +1659,8 @@ static ssize_t i40e_dbg_netdev_ops_read(struct file *filp, char __user *buffer,
 	if (!buf)
 		return -ENOSPC;
 
-	len = snprintf(buf, buf_size, "%s: %s\n",
-		       pf->vsi[pf->lan_vsi]->netdev->name,
+	main_vsi = i40e_pf_get_main_vsi(pf);
+	len = snprintf(buf, buf_size, "%s: %s\n", main_vsi->netdev->name,
 		       i40e_dbg_netdev_ops_buf);
 
 	bytes_not_copied = copy_to_user(buffer, buf, len);

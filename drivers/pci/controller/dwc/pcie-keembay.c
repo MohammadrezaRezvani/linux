@@ -101,7 +101,7 @@ static void keembay_pcie_ltssm_set(struct keembay_pcie *pcie, bool enable)
 	writel(val, pcie->apb_base + PCIE_REGS_PCIE_APP_CNTRL);
 }
 
-static int keembay_pcie_link_up(struct dw_pcie *pci)
+static bool keembay_pcie_link_up(struct dw_pcie *pci)
 {
 	struct keembay_pcie *pcie = dev_get_drvdata(pci->dev);
 	u32 val;
@@ -396,6 +396,7 @@ static int keembay_pcie_probe(struct platform_device *pdev)
 	struct keembay_pcie *pcie;
 	struct dw_pcie *pci;
 	enum dw_pcie_device_mode mode;
+	int ret;
 
 	data = device_get_match_data(dev);
 	if (!data)
@@ -430,11 +431,26 @@ static int keembay_pcie_probe(struct platform_device *pdev)
 			return -ENODEV;
 
 		pci->ep.ops = &keembay_pcie_ep_ops;
-		return dw_pcie_ep_init(&pci->ep);
+		ret = dw_pcie_ep_init(&pci->ep);
+		if (ret)
+			return ret;
+
+		ret = dw_pcie_ep_init_registers(&pci->ep);
+		if (ret) {
+			dev_err(dev, "Failed to initialize DWC endpoint registers\n");
+			dw_pcie_ep_deinit(&pci->ep);
+			return ret;
+		}
+
+		pci_epc_init_notify(pci->ep.epc);
+
+		break;
 	default:
 		dev_err(dev, "Invalid device type %d\n", pcie->mode);
 		return -ENODEV;
 	}
+
+	return 0;
 }
 
 static const struct keembay_pcie_of_data keembay_pcie_rc_of_data = {

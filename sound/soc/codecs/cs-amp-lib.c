@@ -11,6 +11,7 @@
 #include <linux/efi.h>
 #include <linux/firmware/cirrus/cs_dsp.h>
 #include <linux/module.h>
+#include <linux/overflow.h>
 #include <linux/slab.h>
 #include <linux/types.h>
 #include <sound/cs-amp-lib.h>
@@ -56,6 +57,11 @@ static int _cs_amp_write_cal_coeffs(struct cs_dsp *dsp,
 	dev_dbg(dsp->dev, "Calibration: Ambient=%#x, Status=%#x, CalR=%d\n",
 		data->calAmbient, data->calStatus, data->calR);
 
+	if (list_empty(&dsp->ctl_list)) {
+		dev_info(dsp->dev, "Calibration disabled due to missing firmware controls\n");
+		return -ENOENT;
+	}
+
 	ret = cs_amp_write_cal_coeff(dsp, controls, controls->ambient, data->calAmbient);
 	if (ret)
 		return ret;
@@ -92,7 +98,7 @@ int cs_amp_write_cal_coeffs(struct cs_dsp *dsp,
 	else
 		return -ENODEV;
 }
-EXPORT_SYMBOL_NS_GPL(cs_amp_write_cal_coeffs, SND_SOC_CS_AMP_LIB);
+EXPORT_SYMBOL_NS_GPL(cs_amp_write_cal_coeffs, "SND_SOC_CS_AMP_LIB");
 
 static efi_status_t cs_amp_get_efi_variable(efi_char16_t *name,
 					    efi_guid_t *guid,
@@ -103,7 +109,7 @@ static efi_status_t cs_amp_get_efi_variable(efi_char16_t *name,
 
 	KUNIT_STATIC_STUB_REDIRECT(cs_amp_get_efi_variable, name, guid, size, buf);
 
-	if (IS_ENABLED(CONFIG_EFI))
+	if (efi_rt_services_supported(EFI_RT_SUPPORTED_GET_VARIABLE))
 		return efi.get_variable(name, guid, &attr, size, buf);
 
 	return EFI_NOT_FOUND;
@@ -142,7 +148,7 @@ static struct cirrus_amp_efi_data *cs_amp_get_cal_efi_buffer(struct device *dev)
 	dev_dbg(dev, "Calibration: Size=%d, Amp Count=%d\n", efi_data->size, efi_data->count);
 
 	if ((efi_data->count > 128) ||
-	    offsetof(struct cirrus_amp_efi_data, data[efi_data->count]) > data_size) {
+	    struct_size(efi_data, data, efi_data->count) > data_size) {
 		dev_err(dev, "EFI cal variable truncated\n");
 		ret = -EOVERFLOW;
 		goto err;
@@ -177,6 +183,10 @@ static int _cs_amp_get_efi_calibration_data(struct device *dev, u64 target_uid, 
 		for (i = 0; i < efi_data->count; ++i) {
 			u64 cal_target = cs_amp_cal_target_u64(&efi_data->data[i]);
 
+			/* Skip empty entries */
+			if (!efi_data->data[i].calTime[0] && !efi_data->data[i].calTime[1])
+				continue;
+
 			/* Skip entries with unpopulated silicon ID */
 			if (cal_target == 0)
 				continue;
@@ -188,7 +198,8 @@ static int _cs_amp_get_efi_calibration_data(struct device *dev, u64 target_uid, 
 		}
 	}
 
-	if (!cal && (amp_index >= 0) && (amp_index < efi_data->count)) {
+	if (!cal && (amp_index >= 0) && (amp_index < efi_data->count) &&
+	    (efi_data->data[amp_index].calTime[0] || efi_data->data[amp_index].calTime[1])) {
 		u64 cal_target = cs_amp_cal_target_u64(&efi_data->data[amp_index]);
 
 		/*
@@ -260,7 +271,7 @@ int cs_amp_get_efi_calibration_data(struct device *dev, u64 target_uid, int amp_
 	else
 		return -ENOENT;
 }
-EXPORT_SYMBOL_NS_GPL(cs_amp_get_efi_calibration_data, SND_SOC_CS_AMP_LIB);
+EXPORT_SYMBOL_NS_GPL(cs_amp_get_efi_calibration_data, "SND_SOC_CS_AMP_LIB");
 
 static const struct cs_amp_test_hooks cs_amp_test_hook_ptrs = {
 	.get_efi_variable = cs_amp_get_efi_variable,
@@ -269,9 +280,9 @@ static const struct cs_amp_test_hooks cs_amp_test_hook_ptrs = {
 
 const struct cs_amp_test_hooks * const cs_amp_test_hooks =
 	PTR_IF(IS_ENABLED(CONFIG_SND_SOC_CS_AMP_LIB_TEST), &cs_amp_test_hook_ptrs);
-EXPORT_SYMBOL_NS_GPL(cs_amp_test_hooks, SND_SOC_CS_AMP_LIB);
+EXPORT_SYMBOL_NS_GPL(cs_amp_test_hooks, "SND_SOC_CS_AMP_LIB");
 
 MODULE_DESCRIPTION("Cirrus Logic amplifier library");
 MODULE_AUTHOR("Richard Fitzgerald <rf@opensource.cirrus.com>");
 MODULE_LICENSE("GPL");
-MODULE_IMPORT_NS(FW_CS_DSP);
+MODULE_IMPORT_NS("FW_CS_DSP");

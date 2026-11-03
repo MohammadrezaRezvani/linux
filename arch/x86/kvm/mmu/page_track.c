@@ -41,7 +41,7 @@ bool kvm_page_track_write_tracking_enabled(struct kvm *kvm)
 
 void kvm_page_track_free_memslot(struct kvm_memory_slot *slot)
 {
-	kvfree(slot->arch.gfn_write_track);
+	vfree(slot->arch.gfn_write_track);
 	slot->arch.gfn_write_track = NULL;
 }
 
@@ -171,6 +171,9 @@ static int kvm_enable_external_write_tracking(struct kvm *kvm)
 	struct kvm_memslots *slots;
 	struct kvm_memory_slot *slot;
 	int r = 0, i, bkt;
+
+	if (kvm->arch.vm_type == KVM_X86_TDX_VM)
+		return -EOPNOTSUPP;
 
 	mutex_lock(&kvm->slots_arch_lock);
 

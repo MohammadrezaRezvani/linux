@@ -15,6 +15,9 @@ to start learning about RCU:
 |	2014 Big API Table           https://lwn.net/Articles/609973/
 | 6.	The RCU API, 2019 Edition    https://lwn.net/Articles/777036/
 |	2019 Big API Table           https://lwn.net/Articles/777165/
+| 7.	The RCU API, 2024 Edition    https://lwn.net/Articles/988638/
+|       2024 Background Information  https://lwn.net/Articles/988641/
+|	2024 Big API Table           https://lwn.net/Articles/988666/
 
 For those preferring video:
 
@@ -250,21 +253,25 @@ rcu_assign_pointer()
 ^^^^^^^^^^^^^^^^^^^^
 	void rcu_assign_pointer(p, typeof(p) v);
 
-	Yes, rcu_assign_pointer() **is** implemented as a macro, though it
-	would be cool to be able to declare a function in this manner.
-	(Compiler experts will no doubt disagree.)
+	Yes, rcu_assign_pointer() **is** implemented as a macro, though
+	it would be cool to be able to declare a function in this manner.
+	(And there has been some discussion of adding overloaded functions
+	to the C language, so who knows?)
 
 	The updater uses this spatial macro to assign a new value to an
 	RCU-protected pointer, in order to safely communicate the change
 	in value from the updater to the reader.  This is a spatial (as
 	opposed to temporal) macro.  It does not evaluate to an rvalue,
-	but it does execute any memory-barrier instructions required
-	for a given CPU architecture.  Its ordering properties are that
-	of a store-release operation.
+	but it does provide any compiler directives and memory-barrier
+	instructions required for a given compile or CPU architecture.
+	Its ordering properties are that of a store-release operation,
+	that is, any prior loads and stores required to initialize the
+	structure are ordered before the store that publishes the pointer
+	to that structure.
 
-	Perhaps just as important, it serves to document (1) which
-	pointers are protected by RCU and (2) the point at which a
-	given structure becomes accessible to other CPUs.  That said,
+	Perhaps just as important, rcu_assign_pointer() serves to document
+	(1) which pointers are protected by RCU and (2) the point at which
+	a given structure becomes accessible to other CPUs.  That said,
 	rcu_assign_pointer() is most frequently used indirectly, via
 	the _rcu list-manipulation primitives such as list_add_rcu().
 
@@ -283,7 +290,11 @@ rcu_dereference()
 	executes any needed memory-barrier instructions for a given
 	CPU architecture.  Currently, only Alpha needs memory barriers
 	within rcu_dereference() -- on other CPUs, it compiles to a
-	volatile load.
+	volatile load.	However, no mainstream C compilers respect
+	address dependencies, so rcu_dereference() uses volatile casts,
+	which, in combination with the coding guidelines listed in
+	rcu_dereference.rst, prevent current compilers from breaking
+	these dependencies.
 
 	Common coding practice uses rcu_dereference() to copy an
 	RCU-protected pointer to a local variable, then dereferences
@@ -427,7 +438,7 @@ their assorted primitives.
 
 This section shows a simple use of the core RCU API to protect a
 global pointer to a dynamically allocated structure.  More-typical
-uses of RCU may be found in listRCU.rst, arrayRCU.rst, and NMI-RCU.rst.
+uses of RCU may be found in listRCU.rst and NMI-RCU.rst.
 ::
 
 	struct foo {
@@ -510,8 +521,8 @@ So, to sum up:
 	data item.
 
 See checklist.rst for additional rules to follow when using RCU.
-And again, more-typical uses of RCU may be found in listRCU.rst,
-arrayRCU.rst, and NMI-RCU.rst.
+And again, more-typical uses of RCU may be found in listRCU.rst
+and NMI-RCU.rst.
 
 .. _4_whatisRCU:
 
@@ -963,6 +974,16 @@ unfortunately any spinlock in a ``SLAB_TYPESAFE_BY_RCU`` object must be
 initialized after each and every call to kmem_cache_alloc(), which renders
 reference-free spinlock acquisition completely unsafe.  Therefore, when
 using ``SLAB_TYPESAFE_BY_RCU``, make proper use of a reference counter.
+If using refcount_t, the specialized refcount_{add|inc}_not_zero_acquire()
+and refcount_set_release() APIs should be used to ensure correct operation
+ordering when verifying object identity and when initializing newly
+allocated objects. Acquire fence in refcount_{add|inc}_not_zero_acquire()
+ensures that identity checks happen *after* reference count is taken.
+refcount_set_release() should be called after a newly allocated object is
+fully initialized and release fence ensures that new values are visible
+*before* refcount can be successfully taken by other users. Once
+refcount_set_release() is called, the object should be considered visible
+by other tasks.
 (Those willing to initialize their locks in a kmem_cache constructor
 may also use locking, including cache-friendly sequence locking.)
 
@@ -1095,7 +1116,7 @@ RCU-Tasks-Rude::
 
 	Critical sections	Grace period		Barrier
 
-	N/A			call_rcu_tasks_rude	rcu_barrier_tasks_rude
+	N/A						N/A
 				synchronize_rcu_tasks_rude
 
 

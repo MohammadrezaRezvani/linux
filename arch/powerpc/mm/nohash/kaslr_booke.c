@@ -178,7 +178,7 @@ static void __init get_crash_kernel(void *fdt, unsigned long size)
 	int ret;
 
 	ret = parse_crashkernel(boot_command_line, size, &crash_size,
-				&crash_base, NULL, NULL);
+				&crash_base, NULL, NULL, NULL);
 	if (ret != 0 || crash_size == 0)
 		return;
 	if (crash_base == 0)
@@ -376,7 +376,7 @@ notrace void __init kaslr_early_init(void *dt_ptr, phys_addr_t size)
 		create_kaslr_tlb_entry(1, tlb_virt, tlb_phys);
 	}
 
-	/* Copy the kernel to it's new location and run */
+	/* Copy the kernel to its new location and run */
 	memcpy((void *)kernstart_virt_addr, (void *)_stext, kernel_sz);
 	flush_icache_range(kernstart_virt_addr, kernstart_virt_addr + kernel_sz);
 

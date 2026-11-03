@@ -68,7 +68,7 @@
 	};
 
 	pmu {
-		compatible = "arm,armv8-pmuv3";
+		compatible = "arm,cortex-a55-pmu";
 		interrupts = <GIC_PPI 12 IRQ_TYPE_LEVEL_HIGH>;
 	};
 
@@ -78,7 +78,7 @@
 		#size-cells = <2>;
 		ranges;
 
-		internal-regs@7f000000 {
+		bus@7f000000 {
 			#address-cells = <1>;
 			#size-cells = <1>;
 			compatible = "simple-bus";

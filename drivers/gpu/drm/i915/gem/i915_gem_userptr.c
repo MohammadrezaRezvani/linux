@@ -1,9 +1,8 @@
+// SPDX-License-Identifier: MIT
 /*
- * SPDX-License-Identifier: MIT
- *
  * Copyright © 2012-2014 Intel Corporation
  *
-  * Based on amdgpu_mn, which bears the following notice:
+ * Based on amdgpu_mn, which bears the following notice:
  *
  * Copyright 2014 Advanced Micro Devices, Inc.
  * All Rights Reserved.
@@ -463,13 +462,13 @@ i915_gem_userptr_ioctl(struct drm_device *dev,
 		       struct drm_file *file)
 {
 	static struct lock_class_key __maybe_unused lock_class;
-	struct drm_i915_private *dev_priv = to_i915(dev);
+	struct drm_i915_private *i915 = to_i915(dev);
 	struct drm_i915_gem_userptr *args = data;
 	struct drm_i915_gem_object __maybe_unused *obj;
 	int __maybe_unused ret;
 	u32 __maybe_unused handle;
 
-	if (!HAS_LLC(dev_priv) && !HAS_SNOOP(dev_priv)) {
+	if (!HAS_LLC(i915) && !HAS_SNOOP(i915)) {
 		/* We cannot support coherent userptr objects on hw without
 		 * LLC and broken snooping.
 		 */
@@ -501,7 +500,7 @@ i915_gem_userptr_ioctl(struct drm_device *dev,
 		 * On almost all of the older hw, we cannot tell the GPU that
 		 * a page is readonly.
 		 */
-		if (!to_gt(dev_priv)->vm->has_read_only)
+		if (!to_gt(i915)->vm->has_read_only)
 			return -ENODEV;
 	}
 

@@ -17,6 +17,7 @@ struct ipv6_devconf {
 	__s32		hop_limit;
 	__s32		mtu6;
 	__s32		forwarding;
+	__s32		force_forwarding;
 	__s32		disable_policy;
 	__s32		proxy_ndp;
 	__cacheline_group_end(ipv6_devconf_read_txrx);
@@ -89,6 +90,7 @@ struct ipv6_devconf {
 	__u8		ioam6_enabled;
 	__u8		ndisc_evict_nocarrier;
 	__u8		ra_honor_pio_life;
+	__u8		ra_honor_pio_pflag;
 
 	struct ctl_table_header *sysctl_header;
 };
@@ -155,6 +157,7 @@ struct inet6_skb_parm {
 #define IP6SKB_SEG6	      256
 #define IP6SKB_FAKEJUMBO      512
 #define IP6SKB_MULTIPATH      1024
+#define IP6SKB_MCROUTE        2048
 };
 
 #if defined(CONFIG_NET_L3_MASTER_DEV)
@@ -206,6 +209,7 @@ struct inet6_cork {
 	struct ipv6_txoptions *opt;
 	u8 hop_limit;
 	u8 tclass;
+	u8 dontfrag:1;
 };
 
 /* struct ipv6_pinfo - ipv6 private area */

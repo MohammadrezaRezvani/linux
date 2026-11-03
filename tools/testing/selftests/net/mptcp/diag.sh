@@ -200,6 +200,114 @@ chk_msk_cestab()
 		 "${expected}" "${msg}" ""
 }
 
+chk_dump_one()
+{
+	local ss_token
+	local token
+	local msg
+
+	ss_token="$(ss -inmHMN $ns |
+		    mptcp_lib_get_info_value "token" "token")"
+
+	token="$(ip netns exec $ns ./mptcp_diag -t $ss_token |\
+		 awk -F':[ \t]+' '/^token/ {print $2}')"
+
+	msg="....chk dump_one"
+
+	mptcp_lib_print_title "$msg"
+	if [ -n "$ss_token" ] && [ "$ss_token" = "$token" ]; then
+		mptcp_lib_pr_ok
+		mptcp_lib_result_pass "${msg}"
+	else
+		mptcp_lib_pr_fail "expected $ss_token found $token"
+		mptcp_lib_result_fail "${msg}"
+		ret=${KSFT_FAIL}
+	fi
+}
+
+chk_dump_subflow()
+{
+	local inet_diag_token
+	local subflow_line
+	local ss_output
+	local ss_token
+	local msg
+
+	ss_output=$(ss -tniN $ns)
+
+	subflow_line=$(echo "$ss_output" | \
+		       grep -m1 -Eo '[0-9.]+:[0-9].+ +[0-9.]+:[0-9.]+')
+
+	ss_token=$(echo "$ss_output" | grep -m1 -Eo 'token:[^ ]+')
+
+	inet_diag_token=$(ip netns exec $ns ./mptcp_diag -s "$subflow_line" | \
+			  grep -Eo 'token:[^ ]+')
+
+	msg="....chk dump_subflow"
+
+	mptcp_lib_print_title "$msg"
+	if [ -n "$ss_token" ] && [ "$ss_token" = "$inet_diag_token" ]; then
+		mptcp_lib_pr_ok
+		mptcp_lib_result_pass "${msg}"
+	else
+		mptcp_lib_pr_fail "expected $ss_token found $inet_diag_token"
+		mptcp_lib_result_fail "${msg}"
+		ret=${KSFT_FAIL}
+	fi
+}
+
+msk_info_get_value()
+{
+	local port="${1}"
+	local info="${2}"
+
+	ss -N "${ns}" -inHM dport "${port}" | \
+		mptcp_lib_get_info_value "${info}" "${info}"
+}
+
+chk_msk_info()
+{
+	local port="${1}"
+	local info="${2}"
+	local cnt="${3}"
+	local msg="....chk ${info}"
+	local delta_ms=250  # half what we waited before, just to be sure
+	local now
+
+	now=$(msk_info_get_value "${port}" "${info}")
+
+	mptcp_lib_print_title "${msg}"
+	if { [ -z "${cnt}" ] || [ -z "${now}" ]; } &&
+	   ! mptcp_lib_expect_all_features; then
+		mptcp_lib_pr_skip "Feature probably not supported"
+		mptcp_lib_result_skip "${msg}"
+	elif [ "$((cnt + delta_ms))" -lt "${now}" ]; then
+		mptcp_lib_pr_ok
+		mptcp_lib_result_pass "${msg}"
+	else
+		mptcp_lib_pr_fail "value of ${info} changed by $((now - cnt))ms," \
+				  "expected at least ${delta_ms}ms"
+		mptcp_lib_result_fail "${msg}"
+		ret=${KSFT_FAIL}
+	fi
+}
+
+chk_last_time_info()
+{
+	local port="${1}"
+	local data_sent data_recv ack_recv
+
+	data_sent=$(msk_info_get_value "${port}" "last_data_sent")
+	data_recv=$(msk_info_get_value "${port}" "last_data_recv")
+	ack_recv=$(msk_info_get_value "${port}" "last_ack_recv")
+
+	sleep 0.5  # wait to check after if the timestamps difference
+
+	chk_msk_info "${port}" "last_data_sent" "${data_sent}"
+	chk_msk_info "${port}" "last_data_recv" "${data_recv}"
+	chk_msk_info "${port}" "last_ack_recv" "${ack_recv}"
+}
+
 wait_connected()
 {
 	local listener_ns="${1}"
@@ -232,11 +340,14 @@ echo "b" | \
 			./mptcp_connect -p 10000 -r 0 -t ${timeout_poll} -w 20 \
 				127.0.0.1 >/dev/null &
 wait_connected $ns 10000
-chk_msk_nr 2 "after MPC handshake "
+chk_msk_nr 2 "after MPC handshake"
+chk_last_time_info 10000
 chk_msk_remote_key_nr 2 "....chk remote_key"
 chk_msk_fallback_nr 0 "....chk no fallback"
 chk_msk_inuse 2
 chk_msk_cestab 2
+chk_dump_one
+chk_dump_subflow
 flush_pids
 
 chk_msk_inuse 0 "2->0"

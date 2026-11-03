@@ -180,14 +180,14 @@ static struct sk_buff *bcmasp_csum_offload(struct net_device *dev,
 	case htons(ETH_P_IP):
 		header |= PKT_OFFLOAD_HDR_SIZE_2((ip_hdrlen(skb) >> 8) & 0xf);
 		header2 |= PKT_OFFLOAD_HDR2_SIZE_2(ip_hdrlen(skb) & 0xff);
-		epkt |= PKT_OFFLOAD_EPKT_IP(0) | PKT_OFFLOAD_EPKT_CSUM_L2;
+		epkt |= PKT_OFFLOAD_EPKT_IP(0);
 		ip_proto = ip_hdr(skb)->protocol;
 		header_cnt += 2;
 		break;
 	case htons(ETH_P_IPV6):
 		header |= PKT_OFFLOAD_HDR_SIZE_2((IP6_HLEN >> 8) & 0xf);
 		header2 |= PKT_OFFLOAD_HDR2_SIZE_2(IP6_HLEN & 0xff);
-		epkt |= PKT_OFFLOAD_EPKT_IP(1) | PKT_OFFLOAD_EPKT_CSUM_L2;
+		epkt |= PKT_OFFLOAD_EPKT_IP(1);
 		ip_proto = ipv6_hdr(skb)->nexthdr;
 		header_cnt += 2;
 		break;
@@ -198,12 +198,12 @@ static struct sk_buff *bcmasp_csum_offload(struct net_device *dev,
 	switch (ip_proto) {
 	case IPPROTO_TCP:
 		header2 |= PKT_OFFLOAD_HDR2_SIZE_3(tcp_hdrlen(skb));
-		epkt |= PKT_OFFLOAD_EPKT_TP(0) | PKT_OFFLOAD_EPKT_CSUM_L3;
+		epkt |= PKT_OFFLOAD_EPKT_TP(0) | PKT_OFFLOAD_EPKT_CSUM_L4;
 		header_cnt++;
 		break;
 	case IPPROTO_UDP:
 		header2 |= PKT_OFFLOAD_HDR2_SIZE_3(UDP_HLEN);
-		epkt |= PKT_OFFLOAD_EPKT_TP(1) | PKT_OFFLOAD_EPKT_CSUM_L3;
+		epkt |= PKT_OFFLOAD_EPKT_TP(1) | PKT_OFFLOAD_EPKT_CSUM_L4;
 		header_cnt++;
 		break;
 	default:
@@ -322,6 +322,7 @@ static netdev_tx_t bcmasp_xmit(struct sk_buff *skb, struct net_device *dev)
 			}
 			/* Rewind so we do not have a hole */
 			spb_index = intf->tx_spb_index;
+			dev_kfree_skb(skb);
 			return NETDEV_TX_OK;
 		}
 
@@ -364,6 +365,9 @@ static netdev_tx_t bcmasp_xmit(struct sk_buff *skb, struct net_device *dev)
 
 	intf->tx_spb_index = spb_index;
 	intf->tx_spb_dma_valid = valid;
+
+	skb_tx_timestamp(skb);
+
 	bcmasp_intf_tx_write(intf, intf->tx_spb_dma_valid);
 
 	if (tx_spb_ring_full(intf, MAX_SKB_FRAGS + 1))
@@ -392,7 +396,9 @@ static void umac_reset(struct bcmasp_intf *intf)
 	umac_wl(intf, 0x0, UMC_CMD);
 	umac_wl(intf, UMC_CMD_SW_RESET, UMC_CMD);
 	usleep_range(10, 100);
-	umac_wl(intf, 0x0, UMC_CMD);
+	/* We hold the umac in reset and bring it out of
+	 * reset when phy link is up.
+	 */
 }
 
 static void umac_set_hw_addr(struct bcmasp_intf *intf,
@@ -412,6 +418,8 @@ static void umac_enable_set(struct bcmasp_intf *intf, u32 mask,
 	u32 reg;
 
 	reg = umac_rl(intf, UMC_CMD);
+	if (reg & UMC_CMD_SW_RESET)
+		return;
 	if (enable)
 		reg |= mask;
 	else
@@ -430,13 +438,10 @@ static void umac_init(struct bcmasp_intf *intf)
 	umac_wl(intf, 0x800, UMC_FRM_LEN);
 	umac_wl(intf, 0xffff, UMC_PAUSE_CNTRL);
 	umac_wl(intf, 0x800, UMC_RX_MAX_PKT_SZ);
-	umac_enable_set(intf, UMC_CMD_PROMISC, 1);
 }
 
-static int bcmasp_tx_poll(struct napi_struct *napi, int budget)
+static int bcmasp_tx_reclaim(struct bcmasp_intf *intf)
 {
-	struct bcmasp_intf *intf =
-		container_of(napi, struct bcmasp_intf, tx_napi);
 	struct bcmasp_intf_stats64 *stats = &intf->stats64;
 	struct device *kdev = &intf->parent->pdev->dev;
 	unsigned long read, released = 0;
@@ -479,10 +484,16 @@ static int bcmasp_tx_poll(struct napi_struct *napi, int budget)
 							DESC_RING_COUNT);
 	}
 
-	/* Ensure all descriptors have been written to DRAM for the hardware
-	 * to see updated contents.
-	 */
-	wmb();
+	return released;
+}
+
+static int bcmasp_tx_poll(struct napi_struct *napi, int budget)
+{
+	struct bcmasp_intf *intf =
+		container_of(napi, struct bcmasp_intf, tx_napi);
+	int released = 0;
+
+	released = bcmasp_tx_reclaim(intf);
 
 	napi_complete(&intf->tx_napi);
 
@@ -594,10 +605,8 @@ next:
 
 	bcmasp_intf_rx_desc_write(intf, intf->rx_edpkt_dma_read);
 
-	if (processed < budget) {
-		napi_complete_done(&intf->rx_napi, processed);
+	if (processed < budget && napi_complete_done(&intf->rx_napi, processed))
 		bcmasp_enable_rx_irq(intf, 1);
-	}
 
 	return processed;
 }
@@ -608,7 +617,6 @@ static void bcmasp_adj_link(struct net_device *dev)
 	struct phy_device *phydev = dev->phydev;
 	u32 cmd_bits = 0, reg;
 	int changed = 0;
-	bool active;
 
 	if (intf->old_link != phydev->link) {
 		changed = 1;
@@ -658,10 +666,21 @@ static void bcmasp_adj_link(struct net_device *dev)
 			UMC_CMD_HD_EN | UMC_CMD_RX_PAUSE_IGNORE |
 			UMC_CMD_TX_PAUSE_IGNORE);
 		reg |= cmd_bits;
+		if (reg & UMC_CMD_SW_RESET) {
+			reg &= ~UMC_CMD_SW_RESET;
+			umac_wl(intf, reg, UMC_CMD);
+			udelay(2);
+			reg |= UMC_CMD_TX_EN | UMC_CMD_RX_EN | UMC_CMD_PROMISC;
+		}
 		umac_wl(intf, reg, UMC_CMD);
 
-		active = phy_init_eee(phydev, 0) >= 0;
-		bcmasp_eee_enable_set(intf, active);
+		umac_wl(intf, phydev->eee_cfg.tx_lpi_timer, UMC_EEE_LPI_TIMER);
+		reg = umac_rl(intf, UMC_EEE_CTRL);
+		if (phydev->enable_tx_lpi)
+			reg |= EEE_EN;
+		else
+			reg &= ~EEE_EN;
+		umac_wl(intf, reg, UMC_EEE_CTRL);
 	}
 
 	reg = rgmii_rl(intf, RGMII_OOB_CNTRL);
@@ -788,6 +807,7 @@ static void bcmasp_init_tx(struct bcmasp_intf *intf)
 	intf->tx_spb_dma_read = intf->tx_spb_dma_addr;
 	intf->tx_spb_index = 0;
 	intf->tx_spb_clean_index = 0;
+	memset(intf->tx_cbs, 0, sizeof(struct bcmasp_tx_cb) * DESC_RING_COUNT);
 
 	/* Make sure channels are disabled */
 	tx_spb_ctrl_wl(intf, 0x0, TX_SPB_CTRL_ENABLE);
@@ -796,9 +816,10 @@ static void bcmasp_init_tx(struct bcmasp_intf *intf)
 	/* Tx SPB */
 	tx_spb_ctrl_wl(intf, ((intf->channel + 8) << TX_SPB_CTRL_XF_BID_SHIFT),
 		       TX_SPB_CTRL_XF_CTRL2);
-	tx_pause_ctrl_wl(intf, (1 << (intf->channel + 8)), TX_PAUSE_MAP_VECTOR);
+
+	if (intf->parent->tx_chan_offset)
+		tx_pause_ctrl_wl(intf, (1 << (intf->channel + 8)), TX_PAUSE_MAP_VECTOR);
 	tx_spb_top_wl(intf, 0x1e, TX_SPB_TOP_BLKOUT);
-	tx_spb_top_wl(intf, 0x0, TX_SPB_TOP_SPRE_BW_CTRL);
 
 	tx_spb_dma_wq(intf, intf->tx_spb_dma_addr, TX_SPB_DMA_READ);
 	tx_spb_dma_wq(intf, intf->tx_spb_dma_addr, TX_SPB_DMA_BASE);
@@ -875,6 +896,8 @@ static void bcmasp_netif_deinit(struct net_device *dev)
 		usleep_range(1000, 2000);
 	} while (timeout-- > 0);
 	tx_spb_dma_wl(intf, 0x0, TX_SPB_DMA_FIFO_CTRL);
+
+	bcmasp_tx_reclaim(intf);
 
 	umac_enable_set(intf, UMC_CMD_TX_EN, 0);
 
@@ -1035,18 +1058,14 @@ static int bcmasp_netif_init(struct net_device *dev, bool phy_connect)
 
 		/* Indicate that the MAC is responsible for PHY PM */
 		phydev->mac_managed_pm = true;
-	} else if (!intf->wolopts) {
-		ret = phy_resume(dev->phydev);
-		if (ret)
-			goto err_phy_disable;
+
+		/* Set phylib's copy of the LPI timer */
+		phydev->eee_cfg.tx_lpi_timer = umac_rl(intf, UMC_EEE_LPI_TIMER);
 	}
 
 	umac_reset(intf);
 
 	umac_init(intf);
-
-	/* Disable the UniMAC RX/TX */
-	umac_enable_set(intf, (UMC_CMD_RX_EN | UMC_CMD_TX_EN), 0);
 
 	umac_set_hw_addr(intf, dev->dev_addr);
 
@@ -1061,9 +1080,6 @@ static int bcmasp_netif_init(struct net_device *dev, bool phy_connect)
 	bcmasp_init_rx(intf);
 	netif_napi_add(intf->ndev, &intf->rx_napi, bcmasp_rx_poll);
 	bcmasp_enable_rx(intf, 1);
-
-	/* Turn on UniMAC TX/RX */
-	umac_enable_set(intf, (UMC_CMD_RX_EN | UMC_CMD_TX_EN), 1);
 
 	intf->crc_fwd = !!(umac_rl(intf, UMC_CMD) & UMC_CMD_CRC_FWD);
 
@@ -1168,7 +1184,7 @@ static void bcmasp_map_res(struct bcmasp_priv *priv, struct bcmasp_intf *intf)
 {
 	/* Per port */
 	intf->res.umac = priv->base + UMC_OFFSET(intf);
-	intf->res.umac2fb = priv->base + (priv->hw_info->umac2fb +
+	intf->res.umac2fb = priv->base + (UMAC2FB_OFFSET + priv->rx_ctrl_offset +
 					  (intf->port * 0x4));
 	intf->res.rgmii = priv->base + RGMII_OFFSET(intf);
 
@@ -1183,7 +1199,6 @@ static void bcmasp_map_res(struct bcmasp_priv *priv, struct bcmasp_intf *intf)
 	intf->rx_edpkt_cfg = priv->base + RX_EDPKT_CFG_OFFSET(intf);
 }
 
-#define MAX_IRQ_STR_LEN		64
 struct bcmasp_intf *bcmasp_interface_create(struct bcmasp_priv *priv,
 					    struct device_node *ndev_dn, int i)
 {
@@ -1267,6 +1282,8 @@ struct bcmasp_intf *bcmasp_interface_create(struct bcmasp_priv *priv,
 	ndev->hw_features |= ndev->features;
 	ndev->needed_headroom += sizeof(struct bcmasp_pkt_offload);
 
+	netdev_sw_irq_coalesce_default_on(ndev);
+
 	return intf;
 
 err_free_netdev:
@@ -1306,7 +1323,14 @@ static void bcmasp_suspend_to_wol(struct bcmasp_intf *intf)
 	if (intf->wolopts & WAKE_FILTER)
 		bcmasp_netfilt_suspend(intf);
 
-	/* UniMAC receive needs to be turned on */
+	/* Bring UniMAC out of reset if needed and enable RX */
+	reg = umac_rl(intf, UMC_CMD);
+	if (reg & UMC_CMD_SW_RESET)
+		reg &= ~UMC_CMD_SW_RESET;
+
+	reg |= UMC_CMD_RX_EN | UMC_CMD_PROMISC;
+	umac_wl(intf, reg, UMC_CMD);
+
 	umac_enable_set(intf, UMC_CMD_RX_EN, 1);
 
 	if (intf->parent->wol_irq > 0) {
@@ -1314,7 +1338,8 @@ static void bcmasp_suspend_to_wol(struct bcmasp_intf *intf)
 				     ASP_WAKEUP_INTR2_MASK_CLEAR);
 	}
 
-	if (intf->eee.eee_enabled && intf->parent->eee_fixup)
+	if (ndev->phydev && ndev->phydev->eee_cfg.eee_enabled &&
+	    intf->parent->eee_fixup)
 		intf->parent->eee_fixup(intf, true);
 
 	netif_dbg(intf, wol, ndev, "entered WOL mode\n");
@@ -1324,7 +1349,6 @@ int bcmasp_interface_suspend(struct bcmasp_intf *intf)
 {
 	struct device *kdev = &intf->parent->pdev->dev;
 	struct net_device *dev = intf->ndev;
-	int ret = 0;
 
 	if (!netif_running(dev))
 		return 0;
@@ -1334,10 +1358,6 @@ int bcmasp_interface_suspend(struct bcmasp_intf *intf)
 	bcmasp_netif_deinit(dev);
 
 	if (!intf->wolopts) {
-		ret = phy_suspend(dev->phydev);
-		if (ret)
-			goto out;
-
 		if (intf->internal_phy)
 			bcmasp_ephy_enable_set(intf, false);
 		else
@@ -1354,18 +1374,15 @@ int bcmasp_interface_suspend(struct bcmasp_intf *intf)
 
 	clk_disable_unprepare(intf->parent->clk);
 
-	return ret;
-
-out:
-	bcmasp_netif_init(dev, false);
-	return ret;
+	return 0;
 }
 
 static void bcmasp_resume_from_wol(struct bcmasp_intf *intf)
 {
 	u32 reg;
 
-	if (intf->eee.eee_enabled && intf->parent->eee_fixup)
+	if (intf->ndev->phydev && intf->ndev->phydev->eee_cfg.eee_enabled &&
+	    intf->parent->eee_fixup)
 		intf->parent->eee_fixup(intf, false);
 
 	reg = umac_rl(intf, UMC_MPD_CTRL);
@@ -1395,9 +1412,6 @@ int bcmasp_interface_resume(struct bcmasp_intf *intf)
 		goto out;
 
 	bcmasp_resume_from_wol(intf);
-
-	if (intf->eee.eee_enabled)
-		bcmasp_eee_enable_set(intf, true);
 
 	netif_device_attach(dev);
 

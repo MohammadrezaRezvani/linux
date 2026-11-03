@@ -8,11 +8,11 @@
 #define KMSG_COMPONENT "sclp_cmd"
 #define pr_fmt(fmt) KMSG_COMPONENT ": " fmt
 
+#include <linux/cpufeature.h>
 #include <linux/completion.h>
 #include <linux/init.h>
 #include <linux/errno.h>
 #include <linux/err.h>
-#include <linux/export.h>
 #include <linux/slab.h>
 #include <linux/string.h>
 #include <linux/mm.h>
@@ -30,6 +30,9 @@
 #include <asm/page-states.h>
 
 #include "sclp.h"
+
+#define SCLP_CMDW_ASSIGN_STORAGE	0x000d0001
+#define SCLP_CMDW_UNASSIGN_STORAGE	0x000c0001
 
 static void sclp_sync_callback(struct sclp_req *req, void *data)
 {
@@ -225,7 +228,7 @@ static int sclp_assign_storage(u16 rn)
 	unsigned long long start;
 	int rc;
 
-	rc = do_assign_storage(0x000d0001, rn);
+	rc = do_assign_storage(SCLP_CMDW_ASSIGN_STORAGE, rn);
 	if (rc)
 		return rc;
 	start = rn2addr(rn);
@@ -235,7 +238,7 @@ static int sclp_assign_storage(u16 rn)
 
 static int sclp_unassign_storage(u16 rn)
 {
-	return do_assign_storage(0x000c0001, rn);
+	return do_assign_storage(SCLP_CMDW_UNASSIGN_STORAGE, rn);
 }
 
 struct attach_storage_sccb {
@@ -425,7 +428,7 @@ static void __init add_memory_merged(u16 rn)
 		goto skip_add;
 	for (addr = start; addr < start + size; addr += block_size)
 		add_memory(0, addr, block_size,
-			   MACHINE_HAS_EDAT1 ?
+			   cpu_has_edat1() ?
 			   MHP_MEMMAP_ON_MEMORY | MHP_OFFLINE_INACCESSIBLE : MHP_NONE);
 skip_add:
 	first_rn = rn;

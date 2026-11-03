@@ -176,7 +176,6 @@ static void clear_vm_list(struct list_head *list)
 			i915_vma_destroy_locked(vma);
 			i915_gem_object_put(obj);
 		}
-
 	}
 }
 
@@ -680,7 +679,7 @@ void setup_private_pat(struct intel_gt *gt)
 
 	if (GRAPHICS_VER_FULL(i915) >= IP_VER(12, 70))
 		xelpg_setup_private_ppat(gt);
-	else if (GRAPHICS_VER_FULL(i915) >= IP_VER(12, 50))
+	else if (GRAPHICS_VER_FULL(i915) >= IP_VER(12, 55))
 		xehp_setup_private_ppat(gt);
 	else if (GRAPHICS_VER(i915) >= 12)
 		tgl_setup_private_ppat(uncore);

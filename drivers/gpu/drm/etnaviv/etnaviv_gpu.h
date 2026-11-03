@@ -11,6 +11,7 @@
 #include "etnaviv_mmu.h"
 #include "etnaviv_drv.h"
 #include "common.xml.h"
+#include "state.xml.h"
 
 struct etnaviv_gem_submit;
 struct etnaviv_vram_mapping;
@@ -54,18 +55,6 @@ struct etnaviv_chip_identity {
 	/* Number of Neural Network cores. */
 	u32 nn_core_count;
 
-	/* Number of MAD units per Neural Network core. */
-	u32 nn_mad_per_core;
-
-	/* Number of Tensor Processing cores. */
-	u32 tp_core_count;
-
-	/* Size in bytes of the SRAM inside the NPU. */
-	u32 on_chip_sram_size;
-
-	/* Size in bytes of the SRAM across the AXI bus. */
-	u32 axi_sram_size;
-
 	/* Size of the vertex cache. */
 	u32 vertex_cache_size;
 
@@ -104,6 +93,7 @@ struct etnaviv_event {
 struct etnaviv_cmdbuf_suballoc;
 struct regulator;
 struct clk;
+struct reset_control;
 
 #define ETNA_NR_EVENTS 30
 
@@ -155,6 +145,7 @@ struct etnaviv_gpu {
 
 	/* hang detection */
 	u32 hangcheck_dma_addr;
+	u32 hangcheck_primid;
 	u32 hangcheck_fence;
 
 	void __iomem *mmio;
@@ -168,6 +159,7 @@ struct etnaviv_gpu {
 	struct clk *clk_reg;
 	struct clk *clk_core;
 	struct clk *clk_shader;
+	struct reset_control *rst;
 
 	unsigned int freq_scale;
 	unsigned int fe_waitcycles;
@@ -182,6 +174,13 @@ static inline void gpu_write(struct etnaviv_gpu *gpu, u32 reg, u32 data)
 
 static inline u32 gpu_read(struct etnaviv_gpu *gpu, u32 reg)
 {
+	/* On some variants, such as the GC7000r6009, some FE registers
+	 * need two reads to be consistent. Do that extra read here and
+	 * throw away the result.
+	 */
+	if (reg >= VIVS_FE_DMA_STATUS && reg <= VIVS_FE_AUTO_FLUSH)
+		readl(gpu->mmio + reg);
+
 	return readl(gpu->mmio + reg);
 }
 

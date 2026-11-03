@@ -12,6 +12,7 @@
 #include <linux/errno.h>
 #include <linux/gpio/driver.h>
 #include <linux/kernel.h>
+#include <linux/mod_devicetable.h>
 #include <linux/module.h>
 #include <linux/platform_data/cros_ec_commands.h>
 #include <linux/platform_data/cros_ec_proto.h>
@@ -23,24 +24,21 @@
 static const char cros_ec_gpio_prefix[] = "EC:";
 
 /* Setting gpios is only supported when the system is unlocked */
-static void cros_ec_gpio_set(struct gpio_chip *gc, unsigned int gpio, int val)
+static int cros_ec_gpio_set(struct gpio_chip *gc, unsigned int gpio, int val)
 {
 	const char *name = gc->names[gpio] + strlen(cros_ec_gpio_prefix);
 	struct cros_ec_device *cros_ec = gpiochip_get_data(gc);
 	struct ec_params_gpio_set params = {
 		.val = val,
 	};
-	int ret;
 	ssize_t copied;
 
 	copied = strscpy(params.name, name, sizeof(params.name));
 	if (copied < 0)
-		return;
+		return copied;
 
-	ret = cros_ec_cmd(cros_ec, 0, EC_CMD_GPIO_SET, &params,
-			  sizeof(params), NULL, 0);
-	if (ret < 0)
-		dev_err(gc->parent, "error setting gpio%d (%s) on EC: %d\n", gpio, name, ret);
+	return cros_ec_cmd(cros_ec, 0, EC_CMD_GPIO_SET, &params,
+			   sizeof(params), NULL, 0);
 }
 
 static int cros_ec_gpio_get(struct gpio_chip *gc, unsigned int gpio)
@@ -197,11 +195,18 @@ static int cros_ec_gpio_probe(struct platform_device *pdev)
 	return devm_gpiochip_add_data(dev, gc, cros_ec);
 }
 
+static const struct platform_device_id cros_ec_gpio_id[] = {
+	{ "cros-ec-gpio", 0 },
+	{}
+};
+MODULE_DEVICE_TABLE(platform, cros_ec_gpio_id);
+
 static struct platform_driver cros_ec_gpio_driver = {
 	.probe = cros_ec_gpio_probe,
 	.driver = {
 		.name = "cros-ec-gpio",
 	},
+	.id_table = cros_ec_gpio_id,
 };
 module_platform_driver(cros_ec_gpio_driver);
 

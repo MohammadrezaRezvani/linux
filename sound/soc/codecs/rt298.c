@@ -829,11 +829,11 @@ static int rt298_set_dai_fmt(struct snd_soc_dai *dai, unsigned int fmt)
 	struct snd_soc_component *component = dai->component;
 
 	switch (fmt & SND_SOC_DAIFMT_MASTER_MASK) {
-	case SND_SOC_DAIFMT_CBM_CFM:
+	case SND_SOC_DAIFMT_CBP_CFP:
 		snd_soc_component_update_bits(component,
 			RT298_I2S_CTRL1, 0x800, 0x800);
 		break;
-	case SND_SOC_DAIFMT_CBS_CFS:
+	case SND_SOC_DAIFMT_CBC_CFC:
 		snd_soc_component_update_bits(component,
 			RT298_I2S_CTRL1, 0x800, 0x0);
 		break;
@@ -1137,15 +1137,16 @@ static const struct regmap_config rt298_regmap = {
 };
 
 static const struct i2c_device_id rt298_i2c_id[] = {
-	{"rt298", 0},
+	{"rt298"},
 	{}
 };
 MODULE_DEVICE_TABLE(i2c, rt298_i2c_id);
 
 #ifdef CONFIG_ACPI
 static const struct acpi_device_id rt298_acpi_match[] = {
-	{ "INT343A", 0 },
-	{},
+	{ "10EC0298" },
+	{ "INT343A" },
+	{ }
 };
 MODULE_DEVICE_TABLE(acpi, rt298_acpi_match);
 #endif

@@ -1,6 +1,7 @@
 [
     {
         "BriefDescription": "Clockticks for CMS units attached to CHA",
+        "Counter": "0,1,2,3",
         "EventCode": "0x01",
         "EventName": "UNC_CHACMS_CLOCKTICKS",
         "PerPkg": "1",
@@ -9,7 +10,18 @@
         "Unit": "CHACMS"
     },
     {
+        "BriefDescription": "Counts the number of cycles FAST trigger is received from the global FAST distress wire.",
+        "Counter": "0,1,2,3",
+        "EventCode": "0x34",
+        "EventName": "UNC_CHACMS_RING_SRC_THRTL",
+        "Experimental": "1",
+        "PerPkg": "1",
+        "PortMask": "0x000",
+        "Unit": "CHACMS"
+    },
+    {
         "BriefDescription": "Number of CHA clock cycles while the event is enabled",
+        "Counter": "0,1,2,3",
         "EventCode": "0x01",
         "EventName": "UNC_CHA_CLOCKTICKS",
         "PerPkg": "1",
@@ -18,38 +30,47 @@
     },
     {
         "BriefDescription": "Counts transactions that looked into the multi-socket cacheline Directory state, and therefore did not send a snoop because the Directory indicated it was not needed.",
+        "Counter": "0,1,2,3",
         "EventCode": "0x53",
         "EventName": "UNC_CHA_DIR_LOOKUP.NO_SNP",
+        "Experimental": "1",
         "PerPkg": "1",
         "UMask": "0x2",
         "Unit": "CHA"
     },
     {
         "BriefDescription": "Counts  transactions that looked into the multi-socket cacheline Directory state, and sent one or more snoops, because the Directory indicated it was needed.",
+        "Counter": "0,1,2,3",
         "EventCode": "0x53",
         "EventName": "UNC_CHA_DIR_LOOKUP.SNP",
+        "Experimental": "1",
         "PerPkg": "1",
         "UMask": "0x1",
         "Unit": "CHA"
     },
     {
         "BriefDescription": "Counts only multi-socket cacheline Directory state updates memory writes issued from the HA pipe. This does not include memory write requests which are for I (Invalid) or E (Exclusive) cachelines.",
+        "Counter": "0,1,2,3",
         "EventCode": "0x54",
         "EventName": "UNC_CHA_DIR_UPDATE.HA",
+        "Experimental": "1",
         "PerPkg": "1",
         "UMask": "0x1",
         "Unit": "CHA"
     },
     {
         "BriefDescription": "Counts only multi-socket cacheline Directory state updates due to memory writes issued from the TOR pipe which are the result of remote transaction hitting the SF/LLC and returning data Core2Core. This does not include memory write requests which are for I (Invalid) or E (Exclusive) cachelines.",
+        "Counter": "0,1,2,3",
         "EventCode": "0x54",
         "EventName": "UNC_CHA_DIR_UPDATE.TOR",
+        "Experimental": "1",
         "PerPkg": "1",
         "UMask": "0x2",
         "Unit": "CHA"
     },
     {
         "BriefDescription": "Distress signal assertion for dynamic prefetch throttle (DPT).  Threshold for distress signal assertion reached in TOR or IRQ (immediate cause for triggering).",
+        "Counter": "0,1,2,3",
         "EventCode": "0x59",
         "EventName": "UNC_CHA_DISTRESS_ASSERTED.DPT_ANY",
         "PerPkg": "1",
@@ -59,6 +80,7 @@
     },
     {
         "BriefDescription": "Distress signal assertion for dynamic prefetch throttle (DPT).  Threshold for distress signal assertion reached in IRQ (immediate cause for triggering).",
+        "Counter": "0,1,2,3",
         "EventCode": "0x59",
         "EventName": "UNC_CHA_DISTRESS_ASSERTED.DPT_IRQ",
         "PerPkg": "1",
@@ -67,6 +89,7 @@
     },
     {
         "BriefDescription": "Distress signal assertion for dynamic prefetch throttle (DPT).  Threshold for distress signal assertion reached in TOR (immediate cause for triggering).",
+        "Counter": "0,1,2,3",
         "EventCode": "0x59",
         "EventName": "UNC_CHA_DISTRESS_ASSERTED.DPT_TOR",
         "PerPkg": "1",
@@ -75,40 +98,50 @@
     },
     {
         "BriefDescription": "Counts when a normal (Non-Isochronous) full line write is issued from the CHA to the any of the memory controller channels.",
+        "Counter": "0,1,2,3",
         "EventCode": "0x5b",
         "EventName": "UNC_CHA_IMC_WRITES_COUNT.FULL",
+        "Experimental": "1",
         "PerPkg": "1",
         "UMask": "0x1",
         "Unit": "CHA"
     },
     {
         "BriefDescription": "CHA to iMC Full Line Writes Issued : ISOCH Full Line : Counts the total number of full line writes issued from the HA into the memory controller.",
+        "Counter": "0,1,2,3",
         "EventCode": "0x5b",
         "EventName": "UNC_CHA_IMC_WRITES_COUNT.FULL_PRIORITY",
+        "Experimental": "1",
         "PerPkg": "1",
         "UMask": "0x4",
         "Unit": "CHA"
     },
     {
         "BriefDescription": "CHA to iMC Full Line Writes Issued : Partial Non-ISOCH : Counts the total number of full line writes issued from the HA into the memory controller.",
+        "Counter": "0,1,2,3",
         "EventCode": "0x5b",
         "EventName": "UNC_CHA_IMC_WRITES_COUNT.PARTIAL",
+        "Experimental": "1",
         "PerPkg": "1",
         "UMask": "0x2",
         "Unit": "CHA"
     },
     {
         "BriefDescription": "CHA to iMC Full Line Writes Issued : ISOCH Partial : Counts the total number of full line writes issued from the HA into the memory controller.",
+        "Counter": "0,1,2,3",
         "EventCode": "0x5b",
         "EventName": "UNC_CHA_IMC_WRITES_COUNT.PARTIAL_PRIORITY",
+        "Experimental": "1",
         "PerPkg": "1",
         "UMask": "0x8",
         "Unit": "CHA"
     },
     {
         "BriefDescription": "Cache Lookups: All Requests to Remotely Homed Memory",
+        "Counter": "0,1,2,3",
         "EventCode": "0x34",
         "EventName": "UNC_CHA_LLC_LOOKUP.ALL_REMOTE",
+        "Experimental": "1",
         "PerPkg": "1",
         "PublicDescription": "Cache Lookups : All transactions from Remote Agents",
         "UMask": "0x17e0ff",
@@ -116,8 +149,10 @@
     },
     {
         "BriefDescription": "Cache Lookups: CRd Requests",
+        "Counter": "0,1,2,3",
         "EventCode": "0x34",
         "EventName": "UNC_CHA_LLC_LOOKUP.CODE",
+        "Experimental": "1",
         "PerPkg": "1",
         "PublicDescription": "Cache Lookups : CRd Requests",
         "UMask": "0x1bd0ff",
@@ -125,8 +160,10 @@
     },
     {
         "BriefDescription": "Cache Lookups: Read Requests and Read Prefetches",
+        "Counter": "0,1,2,3",
         "EventCode": "0x34",
         "EventName": "UNC_CHA_LLC_LOOKUP.DATA_RD",
+        "Experimental": "1",
         "PerPkg": "1",
         "PublicDescription": "Counts the number of times the LLC was accessed - this includes code, data, prefetches and hints coming from L2.  This has numerous filters available.  Note the non-standard filtering equation.  This event will count requests that lookup the cache multiple times with multiple increments.  One must ALWAYS set umask bit 0 and select a state or states to match.  Otherwise, the event will count nothing.   CHAFilter0[24:21,17] bits correspond to [FMESI] state. Read transactions",
         "UMask": "0x1bc1ff",
@@ -134,8 +171,10 @@
     },
     {
         "BriefDescription": "Cache Lookups: Read Requests, Read Prefetches, and Snoops",
+        "Counter": "0,1,2,3",
         "EventCode": "0x34",
         "EventName": "UNC_CHA_LLC_LOOKUP.DATA_READ_ALL",
+        "Experimental": "1",
         "PerPkg": "1",
         "PublicDescription": "Cache Lookups : Data Reads",
         "UMask": "0x1fc1ff",
@@ -143,8 +182,10 @@
     },
     {
         "BriefDescription": "Cache Lookups: Read Requests to Locally Homed Memory",
+        "Counter": "0,1,2,3",
         "EventCode": "0x34",
         "EventName": "UNC_CHA_LLC_LOOKUP.DATA_READ_LOCAL",
+        "Experimental": "1",
         "PerPkg": "1",
         "PublicDescription": "Cache Lookups : Demand Data Reads, Core and LLC prefetches",
         "UMask": "0x841ff",
@@ -152,8 +193,10 @@
     },
     {
         "BriefDescription": "Cache Lookups: Read Requests, Read Prefetches, and Snoops which miss the Cache",
+        "Counter": "0,1,2,3",
         "EventCode": "0x34",
         "EventName": "UNC_CHA_LLC_LOOKUP.DATA_READ_MISS",
+        "Experimental": "1",
         "PerPkg": "1",
         "PublicDescription": "Cache Lookups : Data Read Misses",
         "UMask": "0x1fc101",
@@ -161,8 +204,10 @@
     },
     {
         "BriefDescription": "Cache Lookups: All Requests to Locally Homed Memory",
+        "Counter": "0,1,2,3",
         "EventCode": "0x34",
         "EventName": "UNC_CHA_LLC_LOOKUP.LOCALLY_HOMED_ADDRESS",
+        "Experimental": "1",
         "PerPkg": "1",
         "PublicDescription": "Cache Lookups : Transactions homed locally",
         "UMask": "0xbdfff",
@@ -170,8 +215,10 @@
     },
     {
         "BriefDescription": "Cache Lookups: Code Read Requests and Code Read Prefetches to Locally Homed Memory",
+        "Counter": "0,1,2,3",
         "EventCode": "0x34",
         "EventName": "UNC_CHA_LLC_LOOKUP.LOCAL_CODE",
+        "Experimental": "1",
         "PerPkg": "1",
         "PublicDescription": "Cache Lookups : CRd Requests",
         "UMask": "0x19d0ff",
@@ -179,8 +226,10 @@
     },
     {
         "BriefDescription": "Cache Lookups: Read Requests and Read Prefetches to Locally Homed Memory",
+        "Counter": "0,1,2,3",
         "EventCode": "0x34",
         "EventName": "UNC_CHA_LLC_LOOKUP.LOCAL_DATA_RD",
+        "Experimental": "1",
         "PerPkg": "1",
         "PublicDescription": "Counts the number of times the LLC was accessed - this includes code, data, prefetches and hints coming from L2.  This has numerous filters available.  Note the non-standard filtering equation.  This event will count requests that lookup the cache multiple times with multiple increments.  One must ALWAYS set umask bit 0 and select a state or states to match.  Otherwise, the event will count nothing.   CHAFilter0[24:21,17] bits correspond to [FMESI] state. Read transactions",
         "UMask": "0x19c1ff",
@@ -188,8 +237,10 @@
     },
     {
         "BriefDescription": "Cache Lookups: Code Read Requests to Locally Homed Memory",
+        "Counter": "0,1,2,3",
         "EventCode": "0x34",
         "EventName": "UNC_CHA_LLC_LOOKUP.LOCAL_DMND_CODE",
+        "Experimental": "1",
         "PerPkg": "1",
         "PublicDescription": "Cache Lookups : CRd Requests",
         "UMask": "0x1850ff",
@@ -197,8 +248,10 @@
     },
     {
         "BriefDescription": "Cache Lookups: Read Requests to Locally Homed Memory",
+        "Counter": "0,1,2,3",
         "EventCode": "0x34",
         "EventName": "UNC_CHA_LLC_LOOKUP.LOCAL_DMND_DATA_RD",
+        "Experimental": "1",
         "PerPkg": "1",
         "PublicDescription": "Counts the number of times the LLC was accessed - this includes code, data, prefetches and hints coming from L2.  This has numerous filters available.  Note the non-standard filtering equation.  This event will count requests that lookup the cache multiple times with multiple increments.  One must ALWAYS set umask bit 0 and select a state or states to match.  Otherwise, the event will count nothing.   CHAFilter0[24:21,17] bits correspond to [FMESI] state. Read transactions",
         "UMask": "0x1841ff",
@@ -206,8 +259,10 @@
     },
     {
         "BriefDescription": "Cache Lookups: RFO Requests to Locally Homed Memory",
+        "Counter": "0,1,2,3",
         "EventCode": "0x34",
         "EventName": "UNC_CHA_LLC_LOOKUP.LOCAL_DMND_RFO",
+        "Experimental": "1",
         "PerPkg": "1",
         "PublicDescription": "Cache Lookups : RFO Requests",
         "UMask": "0x1848ff",
@@ -215,8 +270,10 @@
     },
     {
         "BriefDescription": "Cache Lookups: LLC Prefetch Requests to Locally Homed Memory",
+        "Counter": "0,1,2,3",
         "EventCode": "0x34",
         "EventName": "UNC_CHA_LLC_LOOKUP.LOCAL_LLC_PF",
+        "Experimental": "1",
         "PerPkg": "1",
         "PublicDescription": "Counts the number of times the LLC was accessed - this includes code, data, prefetches and hints coming from L2.  This has numerous filters available.  Note the non-standard filtering equation.  This event will count requests that lookup the cache multiple times with multiple increments.  One must ALWAYS set umask bit 0 and select a state or states to match.  Otherwise, the event will count nothing.   CHAFilter0[24:21,17] bits correspond to [FMESI] state. Read transactions",
         "UMask": "0x189dff",
@@ -224,8 +281,10 @@
     },
     {
         "BriefDescription": "Cache Lookups: All Prefetches to Locally Homed Memory",
+        "Counter": "0,1,2,3",
         "EventCode": "0x34",
         "EventName": "UNC_CHA_LLC_LOOKUP.LOCAL_PF",
+        "Experimental": "1",
         "PerPkg": "1",
         "PublicDescription": "Counts the number of times the LLC was accessed - this includes code, data, prefetches and hints coming from L2.  This has numerous filters available.  Note the non-standard filtering equation.  This event will count requests that lookup the cache multiple times with multiple increments.  One must ALWAYS set umask bit 0 and select a state or states to match.  Otherwise, the event will count nothing.   CHAFilter0[24:21,17] bits correspond to [FMESI] state. Read transactions",
         "UMask": "0x199dff",
@@ -233,8 +292,10 @@
     },
     {
         "BriefDescription": "Cache Lookups: Code Prefetches to Locally Homed Memory",
+        "Counter": "0,1,2,3",
         "EventCode": "0x34",
         "EventName": "UNC_CHA_LLC_LOOKUP.LOCAL_PF_CODE",
+        "Experimental": "1",
         "PerPkg": "1",
         "PublicDescription": "Cache Lookups : CRd Requests",
         "UMask": "0x1910ff",
@@ -242,8 +303,10 @@
     },
     {
         "BriefDescription": "Cache Lookups: Read Prefetches to Locally Homed Memory",
+        "Counter": "0,1,2,3",
         "EventCode": "0x34",
         "EventName": "UNC_CHA_LLC_LOOKUP.LOCAL_PF_DATA_RD",
+        "Experimental": "1",
         "PerPkg": "1",
         "PublicDescription": "Counts the number of times the LLC was accessed - this includes code, data, prefetches and hints coming from L2.  This has numerous filters available.  Note the non-standard filtering equation.  This event will count requests that lookup the cache multiple times with multiple increments.  One must ALWAYS set umask bit 0 and select a state or states to match.  Otherwise, the event will count nothing.   CHAFilter0[24:21,17] bits correspond to [FMESI] state. Read transactions",
         "UMask": "0x1981ff",
@@ -251,8 +314,10 @@
     },
     {
         "BriefDescription": "Cache Lookups: RFO Prefetches to Locally Homed Memory",
+        "Counter": "0,1,2,3",
         "EventCode": "0x34",
         "EventName": "UNC_CHA_LLC_LOOKUP.LOCAL_PF_RFO",
+        "Experimental": "1",
         "PerPkg": "1",
         "PublicDescription": "Cache Lookups : RFO Requests",
         "UMask": "0x1908ff",
@@ -260,8 +325,10 @@
     },
     {
         "BriefDescription": "Cache Lookups: RFO Requests and RFO Prefetches to Locally Homed Memory",
+        "Counter": "0,1,2,3",
         "EventCode": "0x34",
         "EventName": "UNC_CHA_LLC_LOOKUP.LOCAL_RFO",
+        "Experimental": "1",
         "PerPkg": "1",
         "PublicDescription": "Cache Lookups : RFO Requests",
         "UMask": "0x19c8ff",
@@ -269,8 +336,10 @@
     },
     {
         "BriefDescription": "Cache Lookups: All Requests to Remotely Homed Memory",
+        "Counter": "0,1,2,3",
         "EventCode": "0x34",
         "EventName": "UNC_CHA_LLC_LOOKUP.REMOTELY_HOMED_ADDRESS",
+        "Experimental": "1",
         "PerPkg": "1",
         "PublicDescription": "Cache Lookups : Transactions homed remotely : Counts the number of times the LLC was accessed - this includes code, data, prefetches and hints coming from L2.  This has numerous filters available.  Note the non-standard filtering equation.  This event will count requests that lookup the cache multiple times with multiple increments.  One must ALWAYS set umask bit 0 and select a state or states to match.  Otherwise, the event will count nothing. : Transaction whose address resides in a remote MC",
         "UMask": "0x15dfff",
@@ -278,8 +347,10 @@
     },
     {
         "BriefDescription": "Cache Lookups: Code Read/Prefetch Requests from a Remote Socket",
+        "Counter": "0,1,2,3",
         "EventCode": "0x34",
         "EventName": "UNC_CHA_LLC_LOOKUP.REMOTE_CODE",
+        "Experimental": "1",
         "PerPkg": "1",
         "PublicDescription": "Cache Lookups : CRd Requests",
         "UMask": "0x1a10ff",
@@ -287,8 +358,10 @@
     },
     {
         "BriefDescription": "Cache Lookups: Data Read/Prefetch Requests from a Remote Socket",
+        "Counter": "0,1,2,3",
         "EventCode": "0x34",
         "EventName": "UNC_CHA_LLC_LOOKUP.REMOTE_DATA_RD",
+        "Experimental": "1",
         "PerPkg": "1",
         "PublicDescription": "Counts the number of times the LLC was accessed - this includes code, data, prefetches and hints coming from L2.  This has numerous filters available.  Note the non-standard filtering equation.  This event will count requests that lookup the cache multiple times with multiple increments.  One must ALWAYS set umask bit 0 and select a state or states to match.  Otherwise, the event will count nothing.   CHAFilter0[24:21,17] bits correspond to [FMESI] state. Read transactions",
         "UMask": "0x1a01ff",
@@ -296,8 +369,10 @@
     },
     {
         "BriefDescription": "Cache Lookups: RFO Requests/Prefetches from a Remote Socket",
+        "Counter": "0,1,2,3",
         "EventCode": "0x34",
         "EventName": "UNC_CHA_LLC_LOOKUP.REMOTE_RFO",
+        "Experimental": "1",
         "PerPkg": "1",
         "PublicDescription": "Cache Lookups : RFO Requests",
         "UMask": "0x1a08ff",
@@ -305,8 +380,10 @@
     },
     {
         "BriefDescription": "Cache Lookups: Snoop Requests from a Remote Socket",
+        "Counter": "0,1,2,3",
         "EventCode": "0x34",
         "EventName": "UNC_CHA_LLC_LOOKUP.REMOTE_SNP",
+        "Experimental": "1",
         "PerPkg": "1",
         "PublicDescription": "Counts the number of times the LLC was accessed",
         "UMask": "0x1c19ff",
@@ -314,8 +391,10 @@
     },
     {
         "BriefDescription": "Cache Lookups: All RFO and RFO Prefetches",
+        "Counter": "0,1,2,3",
         "EventCode": "0x34",
         "EventName": "UNC_CHA_LLC_LOOKUP.RFO",
+        "Experimental": "1",
         "PerPkg": "1",
         "PublicDescription": "Cache Lookups : All RFOs - Demand and Prefetches",
         "UMask": "0x1bc8ff",
@@ -323,8 +402,10 @@
     },
     {
         "BriefDescription": "Cache Lookups: RFO Requests and RFO Prefetches to Locally Homed Memory",
+        "Counter": "0,1,2,3",
         "EventCode": "0x34",
         "EventName": "UNC_CHA_LLC_LOOKUP.RFO_LOCAL",
+        "Experimental": "1",
         "PerPkg": "1",
         "PublicDescription": "Cache Lookups : Locally HOMed RFOs - Demand and Prefetches",
         "UMask": "0x9c8ff",
@@ -332,8 +413,10 @@
     },
     {
         "BriefDescription": "Cache Lookups: Writes to Locally Homed Memory (includes writebacks from L1/L2)",
+        "Counter": "0,1,2,3",
         "EventCode": "0x34",
         "EventName": "UNC_CHA_LLC_LOOKUP.WRITE_LOCAL",
+        "Experimental": "1",
         "PerPkg": "1",
         "PublicDescription": "Cache Lookups : Writes",
         "UMask": "0x842ff",
@@ -341,8 +424,10 @@
     },
     {
         "BriefDescription": "Cache Lookups: Writes to Remotely Homed Memory (includes writebacks from L1/L2)",
+        "Counter": "0,1,2,3",
         "EventCode": "0x34",
         "EventName": "UNC_CHA_LLC_LOOKUP.WRITE_REMOTE",
+        "Experimental": "1",
         "PerPkg": "1",
         "PublicDescription": "Cache Lookups : Remote Writes",
         "UMask": "0x17c2ff",
@@ -350,8 +435,10 @@
     },
     {
         "BriefDescription": "Counts the number of lines that were victimized on a fill.  This can be filtered by the state that the line was in.",
+        "Counter": "0,1,2,3",
         "EventCode": "0x37",
         "EventName": "UNC_CHA_LLC_VICTIMS.ALL",
+        "Experimental": "1",
         "PerPkg": "1",
         "PublicDescription": "Lines Victimized : All Lines Victimized",
         "UMask": "0xf",
@@ -359,24 +446,30 @@
     },
     {
         "BriefDescription": "Lines Victimized : IA traffic : Counts the number of lines that were victimized on a fill.  This can be filtered by the state that the line was in.",
+        "Counter": "0,1,2,3",
         "EventCode": "0x37",
         "EventName": "UNC_CHA_LLC_VICTIMS.IA",
+        "Experimental": "1",
         "PerPkg": "1",
         "UMask": "0x20",
         "Unit": "CHA"
     },
     {
         "BriefDescription": "Lines Victimized : IO traffic : Counts the number of lines that were victimized on a fill.  This can be filtered by the state that the line was in.",
+        "Counter": "0,1,2,3",
         "EventCode": "0x37",
         "EventName": "UNC_CHA_LLC_VICTIMS.IO",
+        "Experimental": "1",
         "PerPkg": "1",
         "UMask": "0x10",
         "Unit": "CHA"
     },
     {
         "BriefDescription": "Counts the number of lines that were victimized on a fill.  This can be filtered by the state that the line was in.",
+        "Counter": "0,1,2,3",
         "EventCode": "0x37",
         "EventName": "UNC_CHA_LLC_VICTIMS.LOCAL_ALL",
+        "Experimental": "1",
         "PerPkg": "1",
         "PublicDescription": "Lines Victimized : Local - All Lines",
         "UMask": "0x200f",
@@ -384,8 +477,10 @@
     },
     {
         "BriefDescription": "Lines Victimized : Counts the number of lines that were victimized on a fill.  This can be filtered by the state that the line was in.",
+        "Counter": "0,1,2,3",
         "EventCode": "0x37",
         "EventName": "UNC_CHA_LLC_VICTIMS.LOCAL_E",
+        "Experimental": "1",
         "PerPkg": "1",
         "PublicDescription": "Lines Victimized : Local - Lines in E State",
         "UMask": "0x2002",
@@ -393,8 +488,10 @@
     },
     {
         "BriefDescription": "Lines Victimized : Counts the number of lines that were victimized on a fill.  This can be filtered by the state that the line was in.",
+        "Counter": "0,1,2,3",
         "EventCode": "0x37",
         "EventName": "UNC_CHA_LLC_VICTIMS.LOCAL_F",
+        "Experimental": "1",
         "PerPkg": "1",
         "PublicDescription": "Lines Victimized : Local - Lines in F State",
         "UMask": "0x2008",
@@ -402,8 +499,10 @@
     },
     {
         "BriefDescription": "Lines Victimized : Counts the number of lines that were victimized on a fill.  This can be filtered by the state that the line was in.",
+        "Counter": "0,1,2,3",
         "EventCode": "0x37",
         "EventName": "UNC_CHA_LLC_VICTIMS.LOCAL_M",
+        "Experimental": "1",
         "PerPkg": "1",
         "PublicDescription": "Lines Victimized : Local - Lines in M State",
         "UMask": "0x2001",
@@ -411,8 +510,10 @@
     },
     {
         "BriefDescription": "Lines Victimized : Counts the number of lines that were victimized on a fill.  This can be filtered by the state that the line was in.",
+        "Counter": "0,1,2,3",
         "EventCode": "0x37",
         "EventName": "UNC_CHA_LLC_VICTIMS.LOCAL_S",
+        "Experimental": "1",
         "PerPkg": "1",
         "PublicDescription": "Lines Victimized : Local - Lines in S State",
         "UMask": "0x2004",
@@ -420,8 +521,10 @@
     },
     {
         "BriefDescription": "Counts the number of lines that were victimized on a fill.  This can be filtered by the state that the line was in.",
+        "Counter": "0,1,2,3",
         "EventCode": "0x37",
         "EventName": "UNC_CHA_LLC_VICTIMS.REMOTE_ALL",
+        "Experimental": "1",
         "PerPkg": "1",
         "PublicDescription": "Lines Victimized : Remote - All Lines",
         "UMask": "0x800f",
@@ -429,8 +532,10 @@
     },
     {
         "BriefDescription": "Lines Victimized : Counts the number of lines that were victimized on a fill.  This can be filtered by the state that the line was in.",
+        "Counter": "0,1,2,3",
         "EventCode": "0x37",
         "EventName": "UNC_CHA_LLC_VICTIMS.REMOTE_E",
+        "Experimental": "1",
         "PerPkg": "1",
         "PublicDescription": "Lines Victimized : Remote - Lines in E State",
         "UMask": "0x8002",
@@ -438,8 +543,10 @@
     },
     {
         "BriefDescription": "Lines Victimized : Counts the number of lines that were victimized on a fill.  This can be filtered by the state that the line was in.",
+        "Counter": "0,1,2,3",
         "EventCode": "0x37",
         "EventName": "UNC_CHA_LLC_VICTIMS.REMOTE_M",
+        "Experimental": "1",
         "PerPkg": "1",
         "PublicDescription": "Lines Victimized : Remote - Lines in M State",
         "UMask": "0x8001",
@@ -447,8 +554,10 @@
     },
     {
         "BriefDescription": "Lines Victimized : Counts the number of lines that were victimized on a fill.  This can be filtered by the state that the line was in.",
+        "Counter": "0,1,2,3",
         "EventCode": "0x37",
         "EventName": "UNC_CHA_LLC_VICTIMS.REMOTE_S",
+        "Experimental": "1",
         "PerPkg": "1",
         "PublicDescription": "Lines Victimized : Remote - Lines in S State",
         "UMask": "0x8004",
@@ -456,8 +565,10 @@
     },
     {
         "BriefDescription": "Counts the number of lines that were victimized on a fill.  This can be filtered by the state that the line was in.",
+        "Counter": "0,1,2,3",
         "EventCode": "0x37",
         "EventName": "UNC_CHA_LLC_VICTIMS.TOTAL_E",
+        "Experimental": "1",
         "PerPkg": "1",
         "PublicDescription": "Lines Victimized : Lines in E state",
         "UMask": "0x2",
@@ -465,8 +576,10 @@
     },
     {
         "BriefDescription": "Counts the number of lines that were victimized on a fill.  This can be filtered by the state that the line was in.",
+        "Counter": "0,1,2,3",
         "EventCode": "0x37",
         "EventName": "UNC_CHA_LLC_VICTIMS.TOTAL_M",
+        "Experimental": "1",
         "PerPkg": "1",
         "PublicDescription": "Lines Victimized : Lines in M state",
         "UMask": "0x1",
@@ -474,8 +587,10 @@
     },
     {
         "BriefDescription": "Counts the number of lines that were victimized on a fill.  This can be filtered by the state that the line was in.",
+        "Counter": "0,1,2,3",
         "EventCode": "0x37",
         "EventName": "UNC_CHA_LLC_VICTIMS.TOTAL_S",
+        "Experimental": "1",
         "PerPkg": "1",
         "PublicDescription": "Lines Victimized : Lines in S State",
         "UMask": "0x4",
@@ -483,6 +598,7 @@
     },
     {
         "BriefDescription": "Counts when a RFO (the Read for Ownership issued before a  write) request hit a cacheline in the S (Shared) state.",
+        "Counter": "0,1,2,3",
         "EventCode": "0x39",
         "EventName": "UNC_CHA_MISC.RFO_HIT_S",
         "PerPkg": "1",
@@ -492,38 +608,47 @@
     },
     {
         "BriefDescription": "OSB Snoop Broadcast : Local InvItoE : Count of OSB snoop broadcasts. Counts by 1 per request causing OSB snoops to be broadcast. Does not count all the snoops generated by OSB.",
+        "Counter": "0,1,2,3",
         "EventCode": "0x55",
         "EventName": "UNC_CHA_OSB.LOCAL_INVITOE",
+        "Experimental": "1",
         "PerPkg": "1",
         "UMask": "0x1",
         "Unit": "CHA"
     },
     {
         "BriefDescription": "OSB Snoop Broadcast : Local Rd : Count of OSB snoop broadcasts. Counts by 1 per request causing OSB snoops to be broadcast. Does not count all the snoops generated by OSB.",
+        "Counter": "0,1,2,3",
         "EventCode": "0x55",
         "EventName": "UNC_CHA_OSB.LOCAL_READ",
+        "Experimental": "1",
         "PerPkg": "1",
         "UMask": "0x2",
         "Unit": "CHA"
     },
     {
         "BriefDescription": "OSB Snoop Broadcast : Off : Count of OSB snoop broadcasts. Counts by 1 per request causing OSB snoops to be broadcast. Does not count all the snoops generated by OSB.",
+        "Counter": "0,1,2,3",
         "EventCode": "0x55",
         "EventName": "UNC_CHA_OSB.OFF_PWRHEURISTIC",
+        "Experimental": "1",
         "PerPkg": "1",
         "UMask": "0x20",
         "Unit": "CHA"
     },
     {
         "BriefDescription": "OSB Snoop Broadcast : Remote Rd : Count of OSB snoop broadcasts. Counts by 1 per request causing OSB snoops to be broadcast. Does not count all the snoops generated by OSB.",
+        "Counter": "0,1,2,3",
         "EventCode": "0x55",
         "EventName": "UNC_CHA_OSB.REMOTE_READ",
+        "Experimental": "1",
         "PerPkg": "1",
         "UMask": "0x4",
         "Unit": "CHA"
     },
     {
         "BriefDescription": "OSB Snoop Broadcast : RFO HitS Snoop Broadcast : Count of OSB snoop broadcasts. Counts by 1 per request causing OSB snoops to be broadcast. Does not count all the snoops generated by OSB.",
+        "Counter": "0,1,2,3",
         "EventCode": "0x55",
         "EventName": "UNC_CHA_OSB.RFO_HITS_SNP_BCAST",
         "PerPkg": "1",
@@ -532,60 +657,75 @@
     },
     {
         "BriefDescription": "UNC_CHA_REMOTE_SF.ALLOC_EXCLUSIVE",
+        "Counter": "0,1,2,3",
         "EventCode": "0x69",
         "EventName": "UNC_CHA_REMOTE_SF.ALLOC_EXCLUSIVE",
+        "Experimental": "1",
         "PerPkg": "1",
         "UMask": "0x10",
         "Unit": "CHA"
     },
     {
         "BriefDescription": "UNC_CHA_REMOTE_SF.ALLOC_SHARED",
+        "Counter": "0,1,2,3",
         "EventCode": "0x69",
         "EventName": "UNC_CHA_REMOTE_SF.ALLOC_SHARED",
+        "Experimental": "1",
         "PerPkg": "1",
         "UMask": "0x8",
         "Unit": "CHA"
     },
     {
         "BriefDescription": "UNC_CHA_REMOTE_SF.DEALLOC_EVCTCLN",
+        "Counter": "0,1,2,3",
         "EventCode": "0x69",
         "EventName": "UNC_CHA_REMOTE_SF.DEALLOC_EVCTCLN",
+        "Experimental": "1",
         "PerPkg": "1",
         "UMask": "0x40",
         "Unit": "CHA"
     },
     {
         "BriefDescription": "UNC_CHA_REMOTE_SF.DIRBACKED_ONLY",
+        "Counter": "0,1,2,3",
         "EventCode": "0x69",
         "EventName": "UNC_CHA_REMOTE_SF.DIRBACKED_ONLY",
+        "Experimental": "1",
         "PerPkg": "1",
         "Unit": "CHA"
     },
     {
         "BriefDescription": "UNC_CHA_REMOTE_SF.HIT_EXCLUSIVE",
+        "Counter": "0,1,2,3",
         "EventCode": "0x69",
         "EventName": "UNC_CHA_REMOTE_SF.HIT_EXCLUSIVE",
+        "Experimental": "1",
         "PerPkg": "1",
         "UMask": "0x2",
         "Unit": "CHA"
     },
     {
         "BriefDescription": "UNC_CHA_REMOTE_SF.HIT_SHARED",
+        "Counter": "0,1,2,3",
         "EventCode": "0x69",
         "EventName": "UNC_CHA_REMOTE_SF.HIT_SHARED",
+        "Experimental": "1",
         "PerPkg": "1",
         "UMask": "0x1",
         "Unit": "CHA"
     },
     {
         "BriefDescription": "UNC_CHA_REMOTE_SF.INCLUSIVE_ONLY",
+        "Counter": "0,1,2,3",
         "EventCode": "0x69",
         "EventName": "UNC_CHA_REMOTE_SF.INCLUSIVE_ONLY",
+        "Experimental": "1",
         "PerPkg": "1",
         "Unit": "CHA"
     },
     {
         "BriefDescription": "UNC_CHA_REMOTE_SF.MISS",
+        "Counter": "0,1,2,3",
         "EventCode": "0x69",
         "EventName": "UNC_CHA_REMOTE_SF.MISS",
         "PerPkg": "1",
@@ -594,35 +734,44 @@
     },
     {
         "BriefDescription": "UNC_CHA_REMOTE_SF.UPDATE_EXCLUSIVE",
+        "Counter": "0,1,2,3",
         "EventCode": "0x69",
         "EventName": "UNC_CHA_REMOTE_SF.UPDATE_EXCLUSIVE",
+        "Experimental": "1",
         "PerPkg": "1",
         "Unit": "CHA"
     },
     {
         "BriefDescription": "UNC_CHA_REMOTE_SF.UPDATE_SHARED",
+        "Counter": "0,1,2,3",
         "EventCode": "0x69",
         "EventName": "UNC_CHA_REMOTE_SF.UPDATE_SHARED",
+        "Experimental": "1",
         "PerPkg": "1",
         "UMask": "0x80",
         "Unit": "CHA"
     },
     {
         "BriefDescription": "UNC_CHA_REMOTE_SF.VICTIM_EXCLUSIVE",
+        "Counter": "0,1,2,3",
         "EventCode": "0x69",
         "EventName": "UNC_CHA_REMOTE_SF.VICTIM_EXCLUSIVE",
+        "Experimental": "1",
         "PerPkg": "1",
         "Unit": "CHA"
     },
     {
         "BriefDescription": "UNC_CHA_REMOTE_SF.VICTIM_SHARED",
+        "Counter": "0,1,2,3",
         "EventCode": "0x69",
         "EventName": "UNC_CHA_REMOTE_SF.VICTIM_SHARED",
+        "Experimental": "1",
         "PerPkg": "1",
         "Unit": "CHA"
     },
     {
         "BriefDescription": "Counts the total number of requests coming from a unit on this socket for exclusive ownership of a cache line without receiving data (INVITOE) to the CHA.",
+        "Counter": "0,1,2,3",
         "EventCode": "0x50",
         "EventName": "UNC_CHA_REQUESTS.INVITOE",
         "PerPkg": "1",
@@ -632,6 +781,7 @@
     },
     {
         "BriefDescription": "Counts the total number of requests coming from a unit on this socket for exclusive ownership of a cache line without receiving data (INVITOE) to the CHA.",
+        "Counter": "0,1,2,3",
         "EventCode": "0x50",
         "EventName": "UNC_CHA_REQUESTS.INVITOE_LOCAL",
         "PerPkg": "1",
@@ -640,6 +790,7 @@
     },
     {
         "BriefDescription": "Counts the total number of requests coming from a remote socket for exclusive ownership of a cache line without receiving data (INVITOE) to the CHA.",
+        "Counter": "0,1,2,3",
         "EventCode": "0x50",
         "EventName": "UNC_CHA_REQUESTS.INVITOE_REMOTE",
         "PerPkg": "1",
@@ -648,6 +799,7 @@
     },
     {
         "BriefDescription": "Counts read requests made into this CHA. Reads include all read opcodes (including RFO: the Read for Ownership issued before a  write) .",
+        "Counter": "0,1,2,3",
         "EventCode": "0x50",
         "EventName": "UNC_CHA_REQUESTS.READS",
         "PerPkg": "1",
@@ -657,6 +809,7 @@
     },
     {
         "BriefDescription": "Counts read requests coming from a unit on this socket made into this CHA. Reads include all read opcodes (including RFO: the Read for Ownership issued before a  write).",
+        "Counter": "0,1,2,3",
         "EventCode": "0x50",
         "EventName": "UNC_CHA_REQUESTS.READS_LOCAL",
         "PerPkg": "1",
@@ -665,6 +818,7 @@
     },
     {
         "BriefDescription": "Counts read requests coming from a remote socket made into the CHA. Reads include all read opcodes (including RFO: the Read for Ownership issued before a  write).",
+        "Counter": "0,1,2,3",
         "EventCode": "0x50",
         "EventName": "UNC_CHA_REQUESTS.READS_REMOTE",
         "PerPkg": "1",
@@ -673,6 +827,7 @@
     },
     {
         "BriefDescription": "Counts write requests made into the CHA, including streaming, evictions, HitM (Reads from another core to a Modified cacheline), etc.",
+        "Counter": "0,1,2,3",
         "EventCode": "0x50",
         "EventName": "UNC_CHA_REQUESTS.WRITES",
         "PerPkg": "1",
@@ -682,6 +837,7 @@
     },
     {
         "BriefDescription": "Counts  write requests coming from a unit on this socket made into this CHA, including streaming, evictions, HitM (Reads from another core to a Modified cacheline), etc.",
+        "Counter": "0,1,2,3",
         "EventCode": "0x50",
         "EventName": "UNC_CHA_REQUESTS.WRITES_LOCAL",
         "PerPkg": "1",
@@ -690,6 +846,7 @@
     },
     {
         "BriefDescription": "Counts the total number of read requests made into the Home Agent. Reads include all read opcodes (including RFO).  Writes include all writes (streaming, evictions, HitM, etc).",
+        "Counter": "0,1,2,3",
         "EventCode": "0x50",
         "EventName": "UNC_CHA_REQUESTS.WRITES_REMOTE",
         "PerPkg": "1",
@@ -697,9 +854,63 @@
         "Unit": "CHA"
     },
     {
+        "BriefDescription": "Ingress (from CMS) Allocations : IRQ : Counts number of allocations per cycle into the specified Ingress queue.",
+        "Counter": "0,1,2,3",
+        "EventCode": "0x13",
+        "EventName": "UNC_CHA_RxC_INSERTS.IRQ",
+        "Experimental": "1",
+        "PerPkg": "1",
+        "UMask": "0x1",
+        "Unit": "CHA"
+    },
+    {
+        "BriefDescription": "Ingress (from CMS) Occupancy : IRQ : Counts number of entries in the specified Ingress queue in each cycle.",
+        "Counter": "0",
+        "EventCode": "0x11",
+        "EventName": "UNC_CHA_RxC_OCCUPANCY.IRQ",
+        "Experimental": "1",
+        "PerPkg": "1",
+        "UMask": "0x1",
+        "Unit": "CHA"
+    },
+    {
+        "BriefDescription": "Counts snoop filter capacity evictions for entries tracking exclusive lines in the core's cache. Snoop filter capacity evictions occur when the snoop filter is full and evicts an existing entry to track a new entry. Does not count clean evictions such as when a core's cache replaces a tracked cacheline with a new cacheline.",
+        "Counter": "0,1,2,3",
+        "EventCode": "0x3d",
+        "EventName": "UNC_CHA_SF_EVICTION.E_STATE",
+        "Experimental": "1",
+        "PerPkg": "1",
+        "PublicDescription": "Snoop Filter Capacity Evictions : E state",
+        "UMask": "0x2",
+        "Unit": "CHA"
+    },
+    {
+        "BriefDescription": "Counts snoop filter capacity evictions for entries tracking modified lines in the core's cache. Snoop filter capacity evictions occur when the snoop filter is full and evicts an existing entry to track a new entry. Does not count clean evictions such as when a core's cache replaces a tracked cacheline with a new cacheline.",
+        "Counter": "0,1,2,3",
+        "EventCode": "0x3d",
+        "EventName": "UNC_CHA_SF_EVICTION.M_STATE",
+        "PerPkg": "1",
+        "PublicDescription": "Snoop Filter Capacity Evictions : M state",
+        "UMask": "0x1",
+        "Unit": "CHA"
+    },
+    {
+        "BriefDescription": "Counts snoop filter capacity evictions for entries tracking shared lines in the core's cache. Snoop filter capacity evictions occur when the snoop filter is full and evicts an existing entry to track a new entry. Does not count clean evictions such as when a core's cache replaces a tracked cacheline with a new cacheline.",
+        "Counter": "0,1,2,3",
+        "EventCode": "0x3d",
+        "EventName": "UNC_CHA_SF_EVICTION.S_STATE",
+        "Experimental": "1",
+        "PerPkg": "1",
+        "PublicDescription": "Snoop Filter Capacity Evictions : S state",
+        "UMask": "0x4",
+        "Unit": "CHA"
+    },
+    {
         "BriefDescription": "All TOR Inserts",
+        "Counter": "0,1,2,3",
         "EventCode": "0x35",
         "EventName": "UNC_CHA_TOR_INSERTS.ALL",
+        "Experimental": "1",
         "PerPkg": "1",
         "PublicDescription": "TOR Inserts : All",
         "UMask": "0xc001ffff",
@@ -707,152 +918,190 @@
     },
     {
         "BriefDescription": "CLFlush transactions from a CXL device which hit in the L3.",
+        "Counter": "0,1,2,3",
         "EventCode": "0x35",
         "EventName": "UNC_CHA_TOR_INSERTS.CXL_HIT_CLFLUSH",
+        "Experimental": "1",
         "PerPkg": "1",
         "UMask": "0x78c8c7fd20",
         "Unit": "CHA"
     },
     {
         "BriefDescription": "FsRdCur transactions from a CXL device which hit in the L3.",
+        "Counter": "0,1,2,3",
         "EventCode": "0x35",
         "EventName": "UNC_CHA_TOR_INSERTS.CXL_HIT_FSRDCUR",
+        "Experimental": "1",
         "PerPkg": "1",
         "UMask": "0x78c8effd20",
         "Unit": "CHA"
     },
     {
         "BriefDescription": "FsRdCurPtl transactions from a CXL device which hit in the L3.",
+        "Counter": "0,1,2,3",
         "EventCode": "0x35",
         "EventName": "UNC_CHA_TOR_INSERTS.CXL_HIT_FSRDCURPTL",
+        "Experimental": "1",
         "PerPkg": "1",
         "UMask": "0x78c9effd20",
         "Unit": "CHA"
     },
     {
         "BriefDescription": "ItoM transactions from a CXL device which hit in the L3.",
+        "Counter": "0,1,2,3",
         "EventCode": "0x35",
         "EventName": "UNC_CHA_TOR_INSERTS.CXL_HIT_ITOM",
+        "Experimental": "1",
         "PerPkg": "1",
         "UMask": "0x78cc47fd20",
         "Unit": "CHA"
     },
     {
         "BriefDescription": "ItoMWr transactions from a CXL device which hit in the L3.",
+        "Counter": "0,1,2,3",
         "EventCode": "0x35",
         "EventName": "UNC_CHA_TOR_INSERTS.CXL_HIT_ITOMWR",
+        "Experimental": "1",
         "PerPkg": "1",
         "UMask": "0x78cc4ffd20",
         "Unit": "CHA"
     },
     {
         "BriefDescription": "MemPushWr transactions from a CXL device which hit in the L3.",
+        "Counter": "0,1,2,3",
         "EventCode": "0x35",
         "EventName": "UNC_CHA_TOR_INSERTS.CXL_HIT_MEMPUSHWR",
+        "Experimental": "1",
         "PerPkg": "1",
         "UMask": "0x78cc6ffd20",
         "Unit": "CHA"
     },
     {
         "BriefDescription": "WCiL transactions from a CXL device which hit in the L3.",
+        "Counter": "0,1,2,3",
         "EventCode": "0x35",
         "EventName": "UNC_CHA_TOR_INSERTS.CXL_HIT_WCIL",
+        "Experimental": "1",
         "PerPkg": "1",
         "UMask": "0x78c86ffd20",
         "Unit": "CHA"
     },
     {
         "BriefDescription": "WcilF transactions from a CXL device which hit in the L3.",
+        "Counter": "0,1,2,3",
         "EventCode": "0x35",
         "EventName": "UNC_CHA_TOR_INSERTS.CXL_HIT_WCILF",
+        "Experimental": "1",
         "PerPkg": "1",
         "UMask": "0x78c867fd20",
         "Unit": "CHA"
     },
     {
         "BriefDescription": "WiL transactions from a CXL device which hit in the L3.",
+        "Counter": "0,1,2,3",
         "EventCode": "0x35",
         "EventName": "UNC_CHA_TOR_INSERTS.CXL_HIT_WIL",
+        "Experimental": "1",
         "PerPkg": "1",
         "UMask": "0x78c87ffd20",
         "Unit": "CHA"
     },
     {
         "BriefDescription": "CLFlush transactions from a CXL device which miss the L3.",
+        "Counter": "0,1,2,3",
         "EventCode": "0x35",
         "EventName": "UNC_CHA_TOR_INSERTS.CXL_MISS_CLFLUSH",
+        "Experimental": "1",
         "PerPkg": "1",
         "UMask": "0x78c8c7fe20",
         "Unit": "CHA"
     },
     {
         "BriefDescription": "FsRdCur transactions from a CXL device which miss the L3.",
+        "Counter": "0,1,2,3",
         "EventCode": "0x35",
         "EventName": "UNC_CHA_TOR_INSERTS.CXL_MISS_FSRDCUR",
+        "Experimental": "1",
         "PerPkg": "1",
         "UMask": "0x78c8effe20",
         "Unit": "CHA"
     },
     {
         "BriefDescription": "FsRdCurPtl transactions from a CXL device which miss the L3.",
+        "Counter": "0,1,2,3",
         "EventCode": "0x35",
         "EventName": "UNC_CHA_TOR_INSERTS.CXL_MISS_FSRDCURPTL",
+        "Experimental": "1",
         "PerPkg": "1",
         "UMask": "0x78c9effe20",
         "Unit": "CHA"
     },
     {
         "BriefDescription": "ItoM transactions from a CXL device which miss the L3.",
+        "Counter": "0,1,2,3",
         "EventCode": "0x35",
         "EventName": "UNC_CHA_TOR_INSERTS.CXL_MISS_ITOM",
+        "Experimental": "1",
         "PerPkg": "1",
         "UMask": "0x78cc47fe20",
         "Unit": "CHA"
     },
     {
         "BriefDescription": "ItoMWr transactions from a CXL device which miss the L3.",
+        "Counter": "0,1,2,3",
         "EventCode": "0x35",
         "EventName": "UNC_CHA_TOR_INSERTS.CXL_MISS_ITOMWR",
+        "Experimental": "1",
         "PerPkg": "1",
         "UMask": "0x78cc4ffe20",
         "Unit": "CHA"
     },
     {
         "BriefDescription": "MemPushWr transactions from a CXL device which miss the L3.",
+        "Counter": "0,1,2,3",
         "EventCode": "0x35",
         "EventName": "UNC_CHA_TOR_INSERTS.CXL_MISS_MEMPUSHWR",
+        "Experimental": "1",
         "PerPkg": "1",
         "UMask": "0x78cc6ffe20",
         "Unit": "CHA"
     },
     {
         "BriefDescription": "WCiL transactions from a CXL device which miss the L3.",
+        "Counter": "0,1,2,3",
         "EventCode": "0x35",
         "EventName": "UNC_CHA_TOR_INSERTS.CXL_MISS_WCIL",
+        "Experimental": "1",
         "PerPkg": "1",
         "UMask": "0x78c86ffe20",
         "Unit": "CHA"
     },
     {
         "BriefDescription": "WcilF transactions from a CXL device which miss the L3.",
+        "Counter": "0,1,2,3",
         "EventCode": "0x35",
         "EventName": "UNC_CHA_TOR_INSERTS.CXL_MISS_WCILF",
+        "Experimental": "1",
         "PerPkg": "1",
         "UMask": "0x78c867fe20",
         "Unit": "CHA"
     },
     {
         "BriefDescription": "WiL transactions from a CXL device which miss the L3.",
+        "Counter": "0,1,2,3",
         "EventCode": "0x35",
         "EventName": "UNC_CHA_TOR_INSERTS.CXL_MISS_WIL",
+        "Experimental": "1",
         "PerPkg": "1",
         "UMask": "0x78c87ffe20",
         "Unit": "CHA"
     },
     {
         "BriefDescription": "All locally initiated requests from IA Cores",
+        "Counter": "0,1,2,3",
         "EventCode": "0x35",
         "EventName": "UNC_CHA_TOR_INSERTS.IA",
+        "Experimental": "1",
         "PerPkg": "1",
         "PublicDescription": "TOR Inserts : All requests from iA Cores",
         "UMask": "0xc001ff01",
@@ -860,6 +1109,7 @@
     },
     {
         "BriefDescription": "CLFlush events that are initiated from the Core",
+        "Counter": "0,1,2,3",
         "EventCode": "0x35",
         "EventName": "UNC_CHA_TOR_INSERTS.IA_CLFLUSH",
         "PerPkg": "1",
@@ -869,6 +1119,7 @@
     },
     {
         "BriefDescription": "CLFlushOpt events that are initiated from the Core",
+        "Counter": "0,1,2,3",
         "EventCode": "0x35",
         "EventName": "UNC_CHA_TOR_INSERTS.IA_CLFLUSHOPT",
         "PerPkg": "1",
@@ -877,7 +1128,8 @@
         "Unit": "CHA"
     },
     {
-        "BriefDescription": "Code read from local IA that miss the cache",
+        "BriefDescription": "Code read from local IA",
+        "Counter": "0,1,2,3",
         "EventCode": "0x35",
         "EventName": "UNC_CHA_TOR_INSERTS.IA_CRD",
         "PerPkg": "1",
@@ -887,6 +1139,7 @@
     },
     {
         "BriefDescription": "Code read prefetch from local IA that miss the cache",
+        "Counter": "0,1,2,3",
         "EventCode": "0x35",
         "EventName": "UNC_CHA_TOR_INSERTS.IA_CRD_PREF",
         "PerPkg": "1",
@@ -895,7 +1148,8 @@
         "Unit": "CHA"
     },
     {
-        "BriefDescription": "Data read opt from local IA that miss the cache",
+        "BriefDescription": "Data read opt from local IA",
+        "Counter": "0,1,2,3",
         "EventCode": "0x35",
         "EventName": "UNC_CHA_TOR_INSERTS.IA_DRD_OPT",
         "PerPkg": "1",
@@ -904,7 +1158,8 @@
         "Unit": "CHA"
     },
     {
-        "BriefDescription": "Data read opt prefetch from local IA that miss the cache",
+        "BriefDescription": "Data read opt prefetch from local IA",
+        "Counter": "0,1,2,3",
         "EventCode": "0x35",
         "EventName": "UNC_CHA_TOR_INSERTS.IA_DRD_OPT_PREF",
         "PerPkg": "1",
@@ -914,8 +1169,10 @@
     },
     {
         "BriefDescription": "All locally initiated requests from IA Cores which hit the cache",
+        "Counter": "0,1,2,3",
         "EventCode": "0x35",
         "EventName": "UNC_CHA_TOR_INSERTS.IA_HIT",
+        "Experimental": "1",
         "PerPkg": "1",
         "PublicDescription": "TOR Inserts : All requests from iA Cores that Hit the LLC",
         "UMask": "0xc001fd01",
@@ -923,6 +1180,7 @@
     },
     {
         "BriefDescription": "Code read from local IA that hit the cache",
+        "Counter": "0,1,2,3",
         "EventCode": "0x35",
         "EventName": "UNC_CHA_TOR_INSERTS.IA_HIT_CRD",
         "PerPkg": "1",
@@ -932,6 +1190,7 @@
     },
     {
         "BriefDescription": "Code read prefetch from local IA that hit the cache",
+        "Counter": "0,1,2,3",
         "EventCode": "0x35",
         "EventName": "UNC_CHA_TOR_INSERTS.IA_HIT_CRD_PREF",
         "PerPkg": "1",
@@ -941,6 +1200,7 @@
     },
     {
         "BriefDescription": "All requests issued from IA cores to CXL accelerator memory regions that hit the LLC.",
+        "Counter": "0,1,2,3",
         "EventCode": "0x35",
         "EventName": "UNC_CHA_TOR_INSERTS.IA_HIT_CXL_ACC",
         "PerPkg": "1",
@@ -949,6 +1209,7 @@
     },
     {
         "BriefDescription": "Data read opt from local IA that hit the cache",
+        "Counter": "0,1,2,3",
         "EventCode": "0x35",
         "EventName": "UNC_CHA_TOR_INSERTS.IA_HIT_DRD_OPT",
         "PerPkg": "1",
@@ -958,6 +1219,7 @@
     },
     {
         "BriefDescription": "Data read opt prefetch from local IA that hit the cache",
+        "Counter": "0,1,2,3",
         "EventCode": "0x35",
         "EventName": "UNC_CHA_TOR_INSERTS.IA_HIT_DRD_OPT_PREF",
         "PerPkg": "1",
@@ -967,6 +1229,7 @@
     },
     {
         "BriefDescription": "ItoM requests from local IA cores that hit the cache",
+        "Counter": "0,1,2,3",
         "EventCode": "0x35",
         "EventName": "UNC_CHA_TOR_INSERTS.IA_HIT_ITOM",
         "PerPkg": "1",
@@ -976,6 +1239,7 @@
     },
     {
         "BriefDescription": "Last level cache prefetch code read from local IA that hit the cache",
+        "Counter": "0,1,2,3",
         "EventCode": "0x35",
         "EventName": "UNC_CHA_TOR_INSERTS.IA_HIT_LLCPREFCODE",
         "PerPkg": "1",
@@ -985,6 +1249,7 @@
     },
     {
         "BriefDescription": "Last level cache prefetch data read from local IA that hit the cache",
+        "Counter": "0,1,2,3",
         "EventCode": "0x35",
         "EventName": "UNC_CHA_TOR_INSERTS.IA_HIT_LLCPREFDATA",
         "PerPkg": "1",
@@ -994,6 +1259,7 @@
     },
     {
         "BriefDescription": "Last level cache prefetch read for ownership from local IA that hit the cache",
+        "Counter": "0,1,2,3",
         "EventCode": "0x35",
         "EventName": "UNC_CHA_TOR_INSERTS.IA_HIT_LLCPREFRFO",
         "PerPkg": "1",
@@ -1003,6 +1269,7 @@
     },
     {
         "BriefDescription": "Read for ownership from local IA that hit the cache",
+        "Counter": "0,1,2,3",
         "EventCode": "0x35",
         "EventName": "UNC_CHA_TOR_INSERTS.IA_HIT_RFO",
         "PerPkg": "1",
@@ -1012,6 +1279,7 @@
     },
     {
         "BriefDescription": "Read for ownership prefetch from local IA that hit the cache",
+        "Counter": "0,1,2,3",
         "EventCode": "0x35",
         "EventName": "UNC_CHA_TOR_INSERTS.IA_HIT_RFO_PREF",
         "PerPkg": "1",
@@ -1021,6 +1289,7 @@
     },
     {
         "BriefDescription": "ItoM events that are initiated from the Core",
+        "Counter": "0,1,2,3",
         "EventCode": "0x35",
         "EventName": "UNC_CHA_TOR_INSERTS.IA_ITOM",
         "PerPkg": "1",
@@ -1030,6 +1299,7 @@
     },
     {
         "BriefDescription": "ItoMCacheNear requests from local IA cores",
+        "Counter": "0,1,2,3",
         "EventCode": "0x35",
         "EventName": "UNC_CHA_TOR_INSERTS.IA_ITOMCACHENEAR",
         "PerPkg": "1",
@@ -1039,6 +1309,7 @@
     },
     {
         "BriefDescription": "Last level cache prefetch code read from local IA.",
+        "Counter": "0,1,2,3",
         "EventCode": "0x35",
         "EventName": "UNC_CHA_TOR_INSERTS.IA_LLCPREFCODE",
         "PerPkg": "1",
@@ -1048,6 +1319,7 @@
     },
     {
         "BriefDescription": "Last level cache prefetch data read from local IA.",
+        "Counter": "0,1,2,3",
         "EventCode": "0x35",
         "EventName": "UNC_CHA_TOR_INSERTS.IA_LLCPREFDATA",
         "PerPkg": "1",
@@ -1056,7 +1328,8 @@
         "Unit": "CHA"
     },
     {
-        "BriefDescription": "Last level cache prefetch read for ownership from local IA that miss the cache",
+        "BriefDescription": "Last level cache prefetch read for ownership from local IA",
+        "Counter": "0,1,2,3",
         "EventCode": "0x35",
         "EventName": "UNC_CHA_TOR_INSERTS.IA_LLCPREFRFO",
         "PerPkg": "1",
@@ -1066,6 +1339,7 @@
     },
     {
         "BriefDescription": "All locally initiated requests from IA Cores which miss the cache",
+        "Counter": "0,1,2,3",
         "EventCode": "0x35",
         "EventName": "UNC_CHA_TOR_INSERTS.IA_MISS",
         "PerPkg": "1",
@@ -1075,6 +1349,7 @@
     },
     {
         "BriefDescription": "Code read from local IA that miss the cache",
+        "Counter": "0,1,2,3",
         "EventCode": "0x35",
         "EventName": "UNC_CHA_TOR_INSERTS.IA_MISS_CRD",
         "PerPkg": "1",
@@ -1084,6 +1359,7 @@
     },
     {
         "BriefDescription": "CRDs from local IA cores to locally homed memory",
+        "Counter": "0,1,2,3",
         "EventCode": "0x35",
         "EventName": "UNC_CHA_TOR_INSERTS.IA_MISS_CRD_LOCAL",
         "PerPkg": "1",
@@ -1093,6 +1369,7 @@
     },
     {
         "BriefDescription": "Code read prefetch from local IA that miss the cache",
+        "Counter": "0,1,2,3",
         "EventCode": "0x35",
         "EventName": "UNC_CHA_TOR_INSERTS.IA_MISS_CRD_PREF",
         "PerPkg": "1",
@@ -1102,6 +1379,7 @@
     },
     {
         "BriefDescription": "CRD Prefetches from local IA cores to locally homed memory",
+        "Counter": "0,1,2,3",
         "EventCode": "0x35",
         "EventName": "UNC_CHA_TOR_INSERTS.IA_MISS_CRD_PREF_LOCAL",
         "PerPkg": "1",
@@ -1111,6 +1389,7 @@
     },
     {
         "BriefDescription": "CRD Prefetches from local IA cores to remotely homed memory",
+        "Counter": "0,1,2,3",
         "EventCode": "0x35",
         "EventName": "UNC_CHA_TOR_INSERTS.IA_MISS_CRD_PREF_REMOTE",
         "PerPkg": "1",
@@ -1120,6 +1399,7 @@
     },
     {
         "BriefDescription": "CRDs from local IA cores to remotely homed memory",
+        "Counter": "0,1,2,3",
         "EventCode": "0x35",
         "EventName": "UNC_CHA_TOR_INSERTS.IA_MISS_CRD_REMOTE",
         "PerPkg": "1",
@@ -1129,6 +1409,7 @@
     },
     {
         "BriefDescription": "All requests issued from IA cores to CXL accelerator memory regions that miss the LLC.",
+        "Counter": "0,1,2,3",
         "EventCode": "0x35",
         "EventName": "UNC_CHA_TOR_INSERTS.IA_MISS_CXL_ACC",
         "PerPkg": "1",
@@ -1137,6 +1418,7 @@
     },
     {
         "BriefDescription": "DRds and equivalent opcodes issued from an IA core which miss the L3 and target memory in a CXL type 2 memory expander card.",
+        "Counter": "0,1,2,3",
         "EventCode": "0x35",
         "EventName": "UNC_CHA_TOR_INSERTS.IA_MISS_DRD_CXL_ACC",
         "PerPkg": "1",
@@ -1146,6 +1428,7 @@
     },
     {
         "BriefDescription": "Data read opt from local IA that miss the cache",
+        "Counter": "0,1,2,3",
         "EventCode": "0x35",
         "EventName": "UNC_CHA_TOR_INSERTS.IA_MISS_DRD_OPT",
         "PerPkg": "1",
@@ -1155,6 +1438,7 @@
     },
     {
         "BriefDescription": "Inserts into the TOR from local IA cores which miss the LLC and snoop filter with the opcode DRd_Opt, and which target local memory",
+        "Counter": "0,1,2,3",
         "EventCode": "0x35",
         "EventName": "UNC_CHA_TOR_INSERTS.IA_MISS_DRD_OPT_LOCAL",
         "PerPkg": "1",
@@ -1164,6 +1448,7 @@
     },
     {
         "BriefDescription": "Data read opt prefetch from local IA that miss the cache",
+        "Counter": "0,1,2,3",
         "EventCode": "0x35",
         "EventName": "UNC_CHA_TOR_INSERTS.IA_MISS_DRD_OPT_PREF",
         "PerPkg": "1",
@@ -1173,33 +1458,37 @@
     },
     {
         "BriefDescription": "Inserts into the TOR from local IA cores which miss the LLC and snoop filter with the opcode DRD_PREF_OPT, and target local memory",
+        "Counter": "0,1,2,3",
         "EventCode": "0x35",
         "EventName": "UNC_CHA_TOR_INSERTS.IA_MISS_DRD_OPT_PREF_LOCAL",
         "PerPkg": "1",
-        "PublicDescription": "TOR Inserts : DRd_Opt_Prefs issued by iA Cores that missed the LLC",
+        "PublicDescription": "TOR Inserts : Data read opt prefetch from local iA that missed the LLC targeting local memory",
         "UMask": "0xc8a6fe01",
         "Unit": "CHA"
     },
     {
         "BriefDescription": "Inserts into the TOR from local IA cores which miss the LLC and snoop filter with the opcode DRD_PREF_OPT, and target remote memory",
+        "Counter": "0,1,2,3",
         "EventCode": "0x35",
         "EventName": "UNC_CHA_TOR_INSERTS.IA_MISS_DRD_OPT_PREF_REMOTE",
         "PerPkg": "1",
-        "PublicDescription": "TOR Inserts : DRd_Opt_Prefs issued by iA Cores that missed the LLC",
+        "PublicDescription": "TOR Inserts : Data read opt prefetch from local iA that missed the LLC targeting remote memory",
         "UMask": "0xc8a77e01",
         "Unit": "CHA"
     },
     {
         "BriefDescription": "Inserts into the TOR from local IA cores which miss the LLC and snoop filter with the opcode DRd_Opt, and target remote memory",
+        "Counter": "0,1,2,3",
         "EventCode": "0x35",
         "EventName": "UNC_CHA_TOR_INSERTS.IA_MISS_DRD_OPT_REMOTE",
         "PerPkg": "1",
-        "PublicDescription": "TOR Inserts : DRd_Opt issued by iA Cores that missed the LLC",
+        "PublicDescription": "TOR Inserts : Data read opt from local iA that missed the LLC targeting remote memory",
         "UMask": "0xc8277e01",
         "Unit": "CHA"
     },
     {
         "BriefDescription": "L2 data prefetches issued from an IA core which miss the L3 and target memory in a CXL type 2 accelerator.",
+        "Counter": "0,1,2,3",
         "EventCode": "0x35",
         "EventName": "UNC_CHA_TOR_INSERTS.IA_MISS_DRD_PREF_CXL_ACC",
         "PerPkg": "1",
@@ -1208,6 +1497,7 @@
     },
     {
         "BriefDescription": "ItoM requests from local IA cores that miss the cache",
+        "Counter": "0,1,2,3",
         "EventCode": "0x35",
         "EventName": "UNC_CHA_TOR_INSERTS.IA_MISS_ITOM",
         "PerPkg": "1",
@@ -1217,6 +1507,7 @@
     },
     {
         "BriefDescription": "Last level cache prefetch code read from local IA that miss the cache",
+        "Counter": "0,1,2,3",
         "EventCode": "0x35",
         "EventName": "UNC_CHA_TOR_INSERTS.IA_MISS_LLCPREFCODE",
         "PerPkg": "1",
@@ -1226,6 +1517,7 @@
     },
     {
         "BriefDescription": "Last level cache prefetch data read from local IA that miss the cache",
+        "Counter": "0,1,2,3",
         "EventCode": "0x35",
         "EventName": "UNC_CHA_TOR_INSERTS.IA_MISS_LLCPREFDATA",
         "PerPkg": "1",
@@ -1235,6 +1527,7 @@
     },
     {
         "BriefDescription": "LLC data prefetches issued from an IA core which miss the L3 and target memory in a CXL type 2 accelerator.",
+        "Counter": "0,1,2,3",
         "EventCode": "0x35",
         "EventName": "UNC_CHA_TOR_INSERTS.IA_MISS_LLCPREFDATA_CXL_ACC",
         "PerPkg": "1",
@@ -1243,6 +1536,7 @@
     },
     {
         "BriefDescription": "Last level cache prefetch read for ownership from local IA that miss the cache",
+        "Counter": "0,1,2,3",
         "EventCode": "0x35",
         "EventName": "UNC_CHA_TOR_INSERTS.IA_MISS_LLCPREFRFO",
         "PerPkg": "1",
@@ -1252,6 +1546,7 @@
     },
     {
         "BriefDescription": "L2 RFO prefetches issued from an IA core which miss the L3 and target memory in a CXL type 2 accelerator.",
+        "Counter": "0,1,2,3",
         "EventCode": "0x35",
         "EventName": "UNC_CHA_TOR_INSERTS.IA_MISS_LLCPREFRFO_CXL_ACC",
         "PerPkg": "1",
@@ -1260,6 +1555,7 @@
     },
     {
         "BriefDescription": "WCILF requests from local IA cores to locally homed DDR addresses that miss the cache",
+        "Counter": "0,1,2,3",
         "EventCode": "0x35",
         "EventName": "UNC_CHA_TOR_INSERTS.IA_MISS_LOCAL_WCILF_DDR",
         "PerPkg": "1",
@@ -1269,8 +1565,10 @@
     },
     {
         "BriefDescription": "WCILF requests from local IA cores to locally homed PMM addresses which miss the cache",
+        "Counter": "0,1,2,3",
         "EventCode": "0x35",
         "EventName": "UNC_CHA_TOR_INSERTS.IA_MISS_LOCAL_WCILF_PMM",
+        "Experimental": "1",
         "PerPkg": "1",
         "PublicDescription": "TOR Inserts : WCiLFs issued by iA Cores targeting PMM that missed the LLC - HOMed locally",
         "UMask": "0xc8668a01",
@@ -1278,6 +1576,7 @@
     },
     {
         "BriefDescription": "WCIL requests from local IA cores to locally homed DDR addresses that miss the cache",
+        "Counter": "0,1,2,3",
         "EventCode": "0x35",
         "EventName": "UNC_CHA_TOR_INSERTS.IA_MISS_LOCAL_WCIL_DDR",
         "PerPkg": "1",
@@ -1287,8 +1586,10 @@
     },
     {
         "BriefDescription": "WCIL requests from local IA cores to locally homed PMM addresses which miss the cache",
+        "Counter": "0,1,2,3",
         "EventCode": "0x35",
         "EventName": "UNC_CHA_TOR_INSERTS.IA_MISS_LOCAL_WCIL_PMM",
+        "Experimental": "1",
         "PerPkg": "1",
         "PublicDescription": "TOR Inserts : WCiLs issued by iA Cores targeting PMM that missed the LLC - HOMed locally",
         "UMask": "0xc86e8a01",
@@ -1296,6 +1597,7 @@
     },
     {
         "BriefDescription": "WCILF requests from local IA cores to remotely homed DDR addresses that miss the cache",
+        "Counter": "0,1,2,3",
         "EventCode": "0x35",
         "EventName": "UNC_CHA_TOR_INSERTS.IA_MISS_REMOTE_WCILF_DDR",
         "PerPkg": "1",
@@ -1305,8 +1607,10 @@
     },
     {
         "BriefDescription": "WCILF requests from local IA cores to remotely homed PMM addresses which miss the cache",
+        "Counter": "0,1,2,3",
         "EventCode": "0x35",
         "EventName": "UNC_CHA_TOR_INSERTS.IA_MISS_REMOTE_WCILF_PMM",
+        "Experimental": "1",
         "PerPkg": "1",
         "PublicDescription": "TOR Inserts : WCiLFs issued by iA Cores targeting PMM that missed the LLC - HOMed remotely",
         "UMask": "0xc8670a01",
@@ -1314,6 +1618,7 @@
     },
     {
         "BriefDescription": "WCIL requests from local IA cores to remotely homed DDR addresses that miss the cache",
+        "Counter": "0,1,2,3",
         "EventCode": "0x35",
         "EventName": "UNC_CHA_TOR_INSERTS.IA_MISS_REMOTE_WCIL_DDR",
         "PerPkg": "1",
@@ -1323,8 +1628,10 @@
     },
     {
         "BriefDescription": "WCIL requests from local IA cores to remotely homed PMM addresses which miss the cache",
+        "Counter": "0,1,2,3",
         "EventCode": "0x35",
         "EventName": "UNC_CHA_TOR_INSERTS.IA_MISS_REMOTE_WCIL_PMM",
+        "Experimental": "1",
         "PerPkg": "1",
         "PublicDescription": "TOR Inserts : WCiLs issued by iA Cores targeting PMM that missed the LLC - HOMed remotely",
         "UMask": "0xc86f0a01",
@@ -1332,6 +1639,7 @@
     },
     {
         "BriefDescription": "Read for ownership from local IA that miss the cache",
+        "Counter": "0,1,2,3",
         "EventCode": "0x35",
         "EventName": "UNC_CHA_TOR_INSERTS.IA_MISS_RFO",
         "PerPkg": "1",
@@ -1341,6 +1649,7 @@
     },
     {
         "BriefDescription": "RFOs issued from an IA core which miss the L3 and target memory in a CXL type 2 accelerator.",
+        "Counter": "0,1,2,3",
         "EventCode": "0x35",
         "EventName": "UNC_CHA_TOR_INSERTS.IA_MISS_RFO_CXL_ACC",
         "PerPkg": "1",
@@ -1348,7 +1657,8 @@
         "Unit": "CHA"
     },
     {
-        "BriefDescription": "Read for ownership from local IA that miss the cache",
+        "BriefDescription": "Read for ownership from local IA that miss the LLC targeting local memory",
+        "Counter": "0,1,2,3",
         "EventCode": "0x35",
         "EventName": "UNC_CHA_TOR_INSERTS.IA_MISS_RFO_LOCAL",
         "PerPkg": "1",
@@ -1358,6 +1668,7 @@
     },
     {
         "BriefDescription": "Read for ownership prefetch from local IA that miss the cache",
+        "Counter": "0,1,2,3",
         "EventCode": "0x35",
         "EventName": "UNC_CHA_TOR_INSERTS.IA_MISS_RFO_PREF",
         "PerPkg": "1",
@@ -1367,6 +1678,7 @@
     },
     {
         "BriefDescription": "LLC RFO prefetches issued from an IA core which miss the L3 and target memory in a CXL type 2 accelerator.",
+        "Counter": "0,1,2,3",
         "EventCode": "0x35",
         "EventName": "UNC_CHA_TOR_INSERTS.IA_MISS_RFO_PREF_CXL_ACC",
         "PerPkg": "1",
@@ -1374,7 +1686,8 @@
         "Unit": "CHA"
     },
     {
-        "BriefDescription": "Read for ownership prefetch from local IA that miss the cache",
+        "BriefDescription": "Read for ownership prefetch from local IA that miss the LLC targeting local memory",
+        "Counter": "0,1,2,3",
         "EventCode": "0x35",
         "EventName": "UNC_CHA_TOR_INSERTS.IA_MISS_RFO_PREF_LOCAL",
         "PerPkg": "1",
@@ -1383,7 +1696,8 @@
         "Unit": "CHA"
     },
     {
-        "BriefDescription": "Read for ownership prefetch from local IA that miss the cache",
+        "BriefDescription": "Read for ownership prefetch from local IA that miss the LLC targeting remote memory",
+        "Counter": "0,1,2,3",
         "EventCode": "0x35",
         "EventName": "UNC_CHA_TOR_INSERTS.IA_MISS_RFO_PREF_REMOTE",
         "PerPkg": "1",
@@ -1392,7 +1706,8 @@
         "Unit": "CHA"
     },
     {
-        "BriefDescription": "Read for ownership from local IA that miss the cache",
+        "BriefDescription": "Read for ownership from local IA that miss the LLC targeting remote memory",
+        "Counter": "0,1,2,3",
         "EventCode": "0x35",
         "EventName": "UNC_CHA_TOR_INSERTS.IA_MISS_RFO_REMOTE",
         "PerPkg": "1",
@@ -1402,6 +1717,7 @@
     },
     {
         "BriefDescription": "UCRDF requests from local IA cores that miss the cache",
+        "Counter": "0,1,2,3",
         "EventCode": "0x35",
         "EventName": "UNC_CHA_TOR_INSERTS.IA_MISS_UCRDF",
         "PerPkg": "1",
@@ -1411,6 +1727,7 @@
     },
     {
         "BriefDescription": "WCIL requests from a local IA core that miss the cache",
+        "Counter": "0,1,2,3",
         "EventCode": "0x35",
         "EventName": "UNC_CHA_TOR_INSERTS.IA_MISS_WCIL",
         "PerPkg": "1",
@@ -1420,6 +1737,7 @@
     },
     {
         "BriefDescription": "WCILF requests from local IA core that miss the cache",
+        "Counter": "0,1,2,3",
         "EventCode": "0x35",
         "EventName": "UNC_CHA_TOR_INSERTS.IA_MISS_WCILF",
         "PerPkg": "1",
@@ -1429,6 +1747,7 @@
     },
     {
         "BriefDescription": "WCILF requests from local IA cores to DDR homed addresses which miss the cache",
+        "Counter": "0,1,2,3",
         "EventCode": "0x35",
         "EventName": "UNC_CHA_TOR_INSERTS.IA_MISS_WCILF_DDR",
         "PerPkg": "1",
@@ -1438,8 +1757,10 @@
     },
     {
         "BriefDescription": "WCILF requests from local IA cores to PMM homed addresses which miss the cache",
+        "Counter": "0,1,2,3",
         "EventCode": "0x35",
         "EventName": "UNC_CHA_TOR_INSERTS.IA_MISS_WCILF_PMM",
+        "Experimental": "1",
         "PerPkg": "1",
         "PublicDescription": "TOR Inserts : WCiLFs issued by iA Cores targeting PMM that missed the LLC",
         "UMask": "0xc8678a01",
@@ -1447,6 +1768,7 @@
     },
     {
         "BriefDescription": "WCIL requests from local IA cores to DDR homed addresses which miss the cache",
+        "Counter": "0,1,2,3",
         "EventCode": "0x35",
         "EventName": "UNC_CHA_TOR_INSERTS.IA_MISS_WCIL_DDR",
         "PerPkg": "1",
@@ -1456,8 +1778,10 @@
     },
     {
         "BriefDescription": "WCIL requests from a local IA core to PMM homed addresses that miss the cache",
+        "Counter": "0,1,2,3",
         "EventCode": "0x35",
         "EventName": "UNC_CHA_TOR_INSERTS.IA_MISS_WCIL_PMM",
+        "Experimental": "1",
         "PerPkg": "1",
         "PublicDescription": "TOR Inserts : WCiLs issued by iA Cores targeting PMM that missed the LLC",
         "UMask": "0xc86f8a01",
@@ -1465,6 +1789,7 @@
     },
     {
         "BriefDescription": "WIL requests from local IA cores that miss the cache",
+        "Counter": "0,1,2,3",
         "EventCode": "0x35",
         "EventName": "UNC_CHA_TOR_INSERTS.IA_MISS_WIL",
         "PerPkg": "1",
@@ -1473,7 +1798,8 @@
         "Unit": "CHA"
     },
     {
-        "BriefDescription": "Read for ownership from local IA that miss the cache",
+        "BriefDescription": "Read for ownership from local IA",
+        "Counter": "0,1,2,3",
         "EventCode": "0x35",
         "EventName": "UNC_CHA_TOR_INSERTS.IA_RFO",
         "PerPkg": "1",
@@ -1482,7 +1808,8 @@
         "Unit": "CHA"
     },
     {
-        "BriefDescription": "Read for ownership prefetch from local IA that miss the cache",
+        "BriefDescription": "Read for ownership prefetch from local IA",
+        "Counter": "0,1,2,3",
         "EventCode": "0x35",
         "EventName": "UNC_CHA_TOR_INSERTS.IA_RFO_PREF",
         "PerPkg": "1",
@@ -1492,6 +1819,7 @@
     },
     {
         "BriefDescription": "SpecItoM events that are initiated from the Core",
+        "Counter": "0,1,2,3",
         "EventCode": "0x35",
         "EventName": "UNC_CHA_TOR_INSERTS.IA_SPECITOM",
         "PerPkg": "1",
@@ -1501,6 +1829,7 @@
     },
     {
         "BriefDescription": "WbEFtoEs issued by iA Cores.  (Non Modified Write Backs)",
+        "Counter": "0,1,2,3",
         "EventCode": "0x35",
         "EventName": "UNC_CHA_TOR_INSERTS.IA_WBEFTOE",
         "PerPkg": "1",
@@ -1510,6 +1839,7 @@
     },
     {
         "BriefDescription": "WbEFtoIs issued by iA Cores .  (Non Modified Write Backs)",
+        "Counter": "0,1,2,3",
         "EventCode": "0x35",
         "EventName": "UNC_CHA_TOR_INSERTS.IA_WBEFTOI",
         "PerPkg": "1",
@@ -1519,6 +1849,7 @@
     },
     {
         "BriefDescription": "WbMtoEs issued by iA Cores .  (Modified Write Backs)",
+        "Counter": "0,1,2,3",
         "EventCode": "0x35",
         "EventName": "UNC_CHA_TOR_INSERTS.IA_WBMTOE",
         "PerPkg": "1",
@@ -1528,6 +1859,7 @@
     },
     {
         "BriefDescription": "WbMtoI requests from local IA cores",
+        "Counter": "0,1,2,3",
         "EventCode": "0x35",
         "EventName": "UNC_CHA_TOR_INSERTS.IA_WBMTOI",
         "PerPkg": "1",
@@ -1537,6 +1869,7 @@
     },
     {
         "BriefDescription": "WbStoIs issued by iA Cores .  (Non Modified Write Backs)",
+        "Counter": "0,1,2,3",
         "EventCode": "0x35",
         "EventName": "UNC_CHA_TOR_INSERTS.IA_WBSTOI",
         "PerPkg": "1",
@@ -1546,6 +1879,7 @@
     },
     {
         "BriefDescription": "WCIL requests from a local IA core",
+        "Counter": "0,1,2,3",
         "EventCode": "0x35",
         "EventName": "UNC_CHA_TOR_INSERTS.IA_WCIL",
         "PerPkg": "1",
@@ -1555,6 +1889,7 @@
     },
     {
         "BriefDescription": "WCILF requests from local IA core",
+        "Counter": "0,1,2,3",
         "EventCode": "0x35",
         "EventName": "UNC_CHA_TOR_INSERTS.IA_WCILF",
         "PerPkg": "1",
@@ -1564,8 +1899,10 @@
     },
     {
         "BriefDescription": "All TOR inserts from local IO devices",
+        "Counter": "0,1,2,3",
         "EventCode": "0x35",
         "EventName": "UNC_CHA_TOR_INSERTS.IO",
+        "Experimental": "1",
         "PerPkg": "1",
         "PublicDescription": "TOR Inserts : All requests from IO Devices",
         "UMask": "0xc001ff04",
@@ -1573,6 +1910,7 @@
     },
     {
         "BriefDescription": "CLFlush requests from IO devices",
+        "Counter": "0,1,2,3",
         "EventCode": "0x35",
         "EventName": "UNC_CHA_TOR_INSERTS.IO_CLFLUSH",
         "PerPkg": "1",
@@ -1582,8 +1920,10 @@
     },
     {
         "BriefDescription": "All TOR inserts from local IO devices which hit the cache",
+        "Counter": "0,1,2,3",
         "EventCode": "0x35",
         "EventName": "UNC_CHA_TOR_INSERTS.IO_HIT",
+        "Experimental": "1",
         "PerPkg": "1",
         "PublicDescription": "TOR Inserts : All requests from IO Devices that hit the LLC",
         "UMask": "0xc001fd04",
@@ -1591,6 +1931,7 @@
     },
     {
         "BriefDescription": "ItoMs from local IO devices which hit the cache",
+        "Counter": "0,1,2,3",
         "EventCode": "0x35",
         "EventName": "UNC_CHA_TOR_INSERTS.IO_HIT_ITOM",
         "PerPkg": "1",
@@ -1600,6 +1941,7 @@
     },
     {
         "BriefDescription": "ItoMCacheNears, indicating a partial write request, from IO Devices that hit the LLC",
+        "Counter": "0,1,2,3",
         "EventCode": "0x35",
         "EventName": "UNC_CHA_TOR_INSERTS.IO_HIT_ITOMCACHENEAR",
         "PerPkg": "1",
@@ -1609,6 +1951,7 @@
     },
     {
         "BriefDescription": "PCIRDCURs issued by IO devices which hit the LLC",
+        "Counter": "0,1,2,3",
         "EventCode": "0x35",
         "EventName": "UNC_CHA_TOR_INSERTS.IO_HIT_PCIRDCUR",
         "PerPkg": "1",
@@ -1618,6 +1961,7 @@
     },
     {
         "BriefDescription": "RFOs from local IO devices which hit the cache",
+        "Counter": "0,1,2,3",
         "EventCode": "0x35",
         "EventName": "UNC_CHA_TOR_INSERTS.IO_HIT_RFO",
         "PerPkg": "1",
@@ -1627,6 +1971,7 @@
     },
     {
         "BriefDescription": "All TOR ItoM inserts from local IO devices",
+        "Counter": "0,1,2,3",
         "EventCode": "0x35",
         "EventName": "UNC_CHA_TOR_INSERTS.IO_ITOM",
         "PerPkg": "1",
@@ -1636,6 +1981,7 @@
     },
     {
         "BriefDescription": "ItoMCacheNears, indicating a partial write request, from IO Devices",
+        "Counter": "0,1,2,3",
         "EventCode": "0x35",
         "EventName": "UNC_CHA_TOR_INSERTS.IO_ITOMCACHENEAR",
         "PerPkg": "1",
@@ -1644,9 +1990,51 @@
         "Unit": "CHA"
     },
     {
+        "BriefDescription": "ItoMCacheNear (partial write) transactions from an IO device that addresses memory on the local socket",
+        "Counter": "0,1,2,3",
+        "EventCode": "0x35",
+        "EventName": "UNC_CHA_TOR_INSERTS.IO_ITOMCACHENEAR_LOCAL",
+        "PerPkg": "1",
+        "PublicDescription": "TOR Inserts : ItoMCacheNears, indicating a partial write request, from IO Devices that address memory on the local socket",
+        "UMask": "0xcd42ff04",
+        "Unit": "CHA"
+    },
+    {
+        "BriefDescription": "ItoMCacheNear (partial write) transactions from an IO device that addresses memory on a remote socket",
+        "Counter": "0,1,2,3",
+        "EventCode": "0x35",
+        "EventName": "UNC_CHA_TOR_INSERTS.IO_ITOMCACHENEAR_REMOTE",
+        "PerPkg": "1",
+        "PublicDescription": "TOR Inserts : ItoMCacheNears, indicating a partial write request, from IO Devices that address memory on a remote socket",
+        "UMask": "0xcd437f04",
+        "Unit": "CHA"
+    },
+    {
+        "BriefDescription": "ItoM (write) transactions from an IO device that addresses memory on the local socket",
+        "Counter": "0,1,2,3",
+        "EventCode": "0x35",
+        "EventName": "UNC_CHA_TOR_INSERTS.IO_ITOM_LOCAL",
+        "PerPkg": "1",
+        "PublicDescription": "TOR Inserts : ItoM, indicating a write request, from IO Devices that address memory on the local socket",
+        "UMask": "0xcc42ff04",
+        "Unit": "CHA"
+    },
+    {
+        "BriefDescription": "ItoM (write) transactions from an IO device that addresses memory on a remote socket",
+        "Counter": "0,1,2,3",
+        "EventCode": "0x35",
+        "EventName": "UNC_CHA_TOR_INSERTS.IO_ITOM_REMOTE",
+        "PerPkg": "1",
+        "PublicDescription": "TOR Inserts : ItoM, indicating a write request, from IO Devices that address memory on a remote socket",
+        "UMask": "0xcc437f04",
+        "Unit": "CHA"
+    },
+    {
         "BriefDescription": "All TOR inserts from local IO devices which miss the cache",
+        "Counter": "0,1,2,3",
         "EventCode": "0x35",
         "EventName": "UNC_CHA_TOR_INSERTS.IO_MISS",
+        "Experimental": "1",
         "PerPkg": "1",
         "PublicDescription": "TOR Inserts : All requests from IO Devices that missed the LLC",
         "UMask": "0xc001fe04",
@@ -1654,6 +2042,7 @@
     },
     {
         "BriefDescription": "All TOR ItoM inserts from local IO devices which miss the cache",
+        "Counter": "0,1,2,3",
         "EventCode": "0x35",
         "EventName": "UNC_CHA_TOR_INSERTS.IO_MISS_ITOM",
         "PerPkg": "1",
@@ -1663,6 +2052,7 @@
     },
     {
         "BriefDescription": "ItoMCacheNears, indicating a partial write request, from IO Devices that missed the LLC",
+        "Counter": "0,1,2,3",
         "EventCode": "0x35",
         "EventName": "UNC_CHA_TOR_INSERTS.IO_MISS_ITOMCACHENEAR",
         "PerPkg": "1",
@@ -1671,43 +2061,8 @@
         "Unit": "CHA"
     },
     {
-        "BriefDescription": "ItoMCacheNear transactions from an IO device on the local socket that miss the cache",
-        "EventCode": "0x35",
-        "EventName": "UNC_CHA_TOR_INSERTS.IO_MISS_ITOMCACHENEAR_LOCAL",
-        "PerPkg": "1",
-        "PublicDescription": "TOR Inserts : ItoMCacheNears, indicating a partial write request, from IO Devices that missed the LLC",
-        "UMask": "0xcd42fe04",
-        "Unit": "CHA"
-    },
-    {
-        "BriefDescription": "ItoMCacheNear transactions from an IO device on a remote socket that miss the cache",
-        "EventCode": "0x35",
-        "EventName": "UNC_CHA_TOR_INSERTS.IO_MISS_ITOMCACHENEAR_REMOTE",
-        "PerPkg": "1",
-        "PublicDescription": "TOR Inserts : ItoMCacheNears, indicating a partial write request, from IO Devices that missed the LLC",
-        "UMask": "0xcd437e04",
-        "Unit": "CHA"
-    },
-    {
-        "BriefDescription": "ItoM transactions from an IO device on the local socket that miss the cache",
-        "EventCode": "0x35",
-        "EventName": "UNC_CHA_TOR_INSERTS.IO_MISS_ITOM_LOCAL",
-        "PerPkg": "1",
-        "PublicDescription": "TOR Inserts : ItoMs issued by IO Devices that missed the LLC",
-        "UMask": "0xcc42fe04",
-        "Unit": "CHA"
-    },
-    {
-        "BriefDescription": "ItoM transactions from an IO device on a remote socket that miss the cache",
-        "EventCode": "0x35",
-        "EventName": "UNC_CHA_TOR_INSERTS.IO_MISS_ITOM_REMOTE",
-        "PerPkg": "1",
-        "PublicDescription": "TOR Inserts : ItoMs issued by IO Devices that missed the LLC",
-        "UMask": "0xcc437e04",
-        "Unit": "CHA"
-    },
-    {
         "BriefDescription": "PCIRDCURs issued by IO devices which miss the LLC",
+        "Counter": "0,1,2,3",
         "EventCode": "0x35",
         "EventName": "UNC_CHA_TOR_INSERTS.IO_MISS_PCIRDCUR",
         "PerPkg": "1",
@@ -1717,6 +2072,7 @@
     },
     {
         "BriefDescription": "All TOR RFO inserts from local IO devices which miss the cache",
+        "Counter": "0,1,2,3",
         "EventCode": "0x35",
         "EventName": "UNC_CHA_TOR_INSERTS.IO_MISS_RFO",
         "PerPkg": "1",
@@ -1726,6 +2082,7 @@
     },
     {
         "BriefDescription": "PCIRDCURs issued by IO devices",
+        "Counter": "0,1,2,3",
         "EventCode": "0x35",
         "EventName": "UNC_CHA_TOR_INSERTS.IO_PCIRDCUR",
         "PerPkg": "1",
@@ -1734,7 +2091,28 @@
         "Unit": "CHA"
     },
     {
+        "BriefDescription": "PCIRDCUR (read) transactions from an IO device that addresses memory on the local socket",
+        "Counter": "0,1,2,3",
+        "EventCode": "0x35",
+        "EventName": "UNC_CHA_TOR_INSERTS.IO_PCIRDCUR_LOCAL",
+        "PerPkg": "1",
+        "PublicDescription": "TOR Inserts : PCIRdCurs issued by IO Devices that addresses memory on the local socket",
+        "UMask": "0xc8f2ff04",
+        "Unit": "CHA"
+    },
+    {
+        "BriefDescription": "PCIRDCUR (read) transactions from an IO device that addresses memory on a remote socket",
+        "Counter": "0,1,2,3",
+        "EventCode": "0x35",
+        "EventName": "UNC_CHA_TOR_INSERTS.IO_PCIRDCUR_REMOTE",
+        "PerPkg": "1",
+        "PublicDescription": "TOR Inserts : PCIRdCurs issued by IO Devices that addresses memory on a remote socket",
+        "UMask": "0xc8f37f04",
+        "Unit": "CHA"
+    },
+    {
         "BriefDescription": "RFOs from local IO devices",
+        "Counter": "0,1,2,3",
         "EventCode": "0x35",
         "EventName": "UNC_CHA_TOR_INSERTS.IO_RFO",
         "PerPkg": "1",
@@ -1744,6 +2122,7 @@
     },
     {
         "BriefDescription": "WBMtoI requests from IO devices",
+        "Counter": "0,1,2,3",
         "EventCode": "0x35",
         "EventName": "UNC_CHA_TOR_INSERTS.IO_WBMTOI",
         "PerPkg": "1",
@@ -1753,6 +2132,7 @@
     },
     {
         "BriefDescription": "TOR Inserts for SF or LLC Evictions",
+        "Counter": "0,1,2,3",
         "EventCode": "0x35",
         "EventName": "UNC_CHA_TOR_INSERTS.LLC_OR_SF_EVICTIONS",
         "PerPkg": "1",
@@ -1762,8 +2142,10 @@
     },
     {
         "BriefDescription": "All locally initiated requests",
+        "Counter": "0,1,2,3",
         "EventCode": "0x35",
         "EventName": "UNC_CHA_TOR_INSERTS.LOC_ALL",
+        "Experimental": "1",
         "PerPkg": "1",
         "PublicDescription": "TOR Inserts : All from Local iA and IO",
         "UMask": "0xc000ff05",
@@ -1771,8 +2153,10 @@
     },
     {
         "BriefDescription": "All from Local iA",
+        "Counter": "0,1,2,3",
         "EventCode": "0x35",
         "EventName": "UNC_CHA_TOR_INSERTS.LOC_IA",
+        "Experimental": "1",
         "PerPkg": "1",
         "PublicDescription": "TOR Inserts : All from Local iA",
         "UMask": "0xc000ff01",
@@ -1780,8 +2164,10 @@
     },
     {
         "BriefDescription": "All from Local IO",
+        "Counter": "0,1,2,3",
         "EventCode": "0x35",
         "EventName": "UNC_CHA_TOR_INSERTS.LOC_IO",
+        "Experimental": "1",
         "PerPkg": "1",
         "PublicDescription": "TOR Inserts : All from Local IO",
         "UMask": "0xc000ff04",
@@ -1789,8 +2175,10 @@
     },
     {
         "BriefDescription": "All remote requests (e.g. snoops, writebacks) that came from remote sockets",
+        "Counter": "0,1,2,3",
         "EventCode": "0x35",
         "EventName": "UNC_CHA_TOR_INSERTS.REM_ALL",
+        "Experimental": "1",
         "PerPkg": "1",
         "PublicDescription": "TOR Inserts : All Remote Requests",
         "UMask": "0xc001ffc8",
@@ -1798,8 +2186,10 @@
     },
     {
         "BriefDescription": "All snoops to this LLC that came from remote sockets",
+        "Counter": "0,1,2,3",
         "EventCode": "0x35",
         "EventName": "UNC_CHA_TOR_INSERTS.REM_SNPS",
+        "Experimental": "1",
         "PerPkg": "1",
         "PublicDescription": "TOR Inserts : All Snoops from Remote",
         "UMask": "0xc001ff08",
@@ -1807,8 +2197,10 @@
     },
     {
         "BriefDescription": "Occupancy for all TOR entries",
+        "Counter": "0",
         "EventCode": "0x36",
         "EventName": "UNC_CHA_TOR_OCCUPANCY.ALL",
+        "Experimental": "1",
         "PerPkg": "1",
         "PublicDescription": "TOR Occupancy : All",
         "UMask": "0xc001ffff",
@@ -1816,152 +2208,190 @@
     },
     {
         "BriefDescription": "TOR Occupancy for CLFlush transactions from a CXL device which hit in the L3.",
+        "Counter": "0",
         "EventCode": "0x36",
         "EventName": "UNC_CHA_TOR_OCCUPANCY.CXL_HIT_CLFLUSH",
+        "Experimental": "1",
         "PerPkg": "1",
         "UMask": "0x78c8c7fd20",
         "Unit": "CHA"
     },
     {
         "BriefDescription": "TOR Occupancy for FsRdCur transactions from a CXL device which hit in the L3.",
+        "Counter": "0",
         "EventCode": "0x36",
         "EventName": "UNC_CHA_TOR_OCCUPANCY.CXL_HIT_FSRDCUR",
+        "Experimental": "1",
         "PerPkg": "1",
         "UMask": "0x78c8effd20",
         "Unit": "CHA"
     },
     {
         "BriefDescription": "TOR Occupancy for FsRdCurPtl transactions from a CXL device which hit in the L3.",
+        "Counter": "0",
         "EventCode": "0x36",
         "EventName": "UNC_CHA_TOR_OCCUPANCY.CXL_HIT_FSRDCURPTL",
+        "Experimental": "1",
         "PerPkg": "1",
         "UMask": "0x78c9effd20",
         "Unit": "CHA"
     },
     {
         "BriefDescription": "TOR Occupancy for ItoM transactions from a CXL device which hit in the L3.",
+        "Counter": "0",
         "EventCode": "0x36",
         "EventName": "UNC_CHA_TOR_OCCUPANCY.CXL_HIT_ITOM",
+        "Experimental": "1",
         "PerPkg": "1",
         "UMask": "0x78cc47fd20",
         "Unit": "CHA"
     },
     {
         "BriefDescription": "TOR Occupancy for ItoMWr transactions from a CXL device which hit in the L3.",
+        "Counter": "0",
         "EventCode": "0x36",
         "EventName": "UNC_CHA_TOR_OCCUPANCY.CXL_HIT_ITOMWR",
+        "Experimental": "1",
         "PerPkg": "1",
         "UMask": "0x78cc4ffd20",
         "Unit": "CHA"
     },
     {
         "BriefDescription": "TOR Occupancy for MemPushWr transactions from a CXL device which hit in the L3.",
+        "Counter": "0",
         "EventCode": "0x36",
         "EventName": "UNC_CHA_TOR_OCCUPANCY.CXL_HIT_MEMPUSHWR",
+        "Experimental": "1",
         "PerPkg": "1",
         "UMask": "0x78cc6ffd20",
         "Unit": "CHA"
     },
     {
         "BriefDescription": "TOR Occupancy for WCiL transactions from a CXL device which hit in the L3.",
+        "Counter": "0",
         "EventCode": "0x36",
         "EventName": "UNC_CHA_TOR_OCCUPANCY.CXL_HIT_WCIL",
+        "Experimental": "1",
         "PerPkg": "1",
         "UMask": "0x78c86ffd20",
         "Unit": "CHA"
     },
     {
         "BriefDescription": "TOR Occupancy for WcilF transactions from a CXL device which hit in the L3.",
+        "Counter": "0",
         "EventCode": "0x36",
         "EventName": "UNC_CHA_TOR_OCCUPANCY.CXL_HIT_WCILF",
+        "Experimental": "1",
         "PerPkg": "1",
         "UMask": "0x78c867fd20",
         "Unit": "CHA"
     },
     {
         "BriefDescription": "TOR Occupancy for WiL transactions from a CXL device which hit in the L3.",
+        "Counter": "0",
         "EventCode": "0x36",
         "EventName": "UNC_CHA_TOR_OCCUPANCY.CXL_HIT_WIL",
+        "Experimental": "1",
         "PerPkg": "1",
         "UMask": "0x78c87ffd20",
         "Unit": "CHA"
     },
     {
         "BriefDescription": "TOR Occupancy for CLFlush transactions from a CXL device which miss the L3.",
+        "Counter": "0",
         "EventCode": "0x36",
         "EventName": "UNC_CHA_TOR_OCCUPANCY.CXL_MISS_CLFLUSH",
+        "Experimental": "1",
         "PerPkg": "1",
         "UMask": "0x78c8c7fe20",
         "Unit": "CHA"
     },
     {
         "BriefDescription": "TOR Occupancy for FsRdCur transactions from a CXL device which miss the L3.",
+        "Counter": "0",
         "EventCode": "0x36",
         "EventName": "UNC_CHA_TOR_OCCUPANCY.CXL_MISS_FSRDCUR",
+        "Experimental": "1",
         "PerPkg": "1",
         "UMask": "0x78c8effe20",
         "Unit": "CHA"
     },
     {
         "BriefDescription": "TOR Occupancy for FsRdCurPtl transactions from a CXL device which miss the L3.",
+        "Counter": "0",
         "EventCode": "0x36",
         "EventName": "UNC_CHA_TOR_OCCUPANCY.CXL_MISS_FSRDCURPTL",
+        "Experimental": "1",
         "PerPkg": "1",
         "UMask": "0x78c9effe20",
         "Unit": "CHA"
     },
     {
         "BriefDescription": "TOR Occupancy for ItoM transactions from a CXL device which miss the L3.",
+        "Counter": "0",
         "EventCode": "0x36",
         "EventName": "UNC_CHA_TOR_OCCUPANCY.CXL_MISS_ITOM",
+        "Experimental": "1",
         "PerPkg": "1",
         "UMask": "0x78cc47fe20",
         "Unit": "CHA"
     },
     {
         "BriefDescription": "TOR Occupancy for ItoMWr transactions from a CXL device which miss the L3.",
+        "Counter": "0",
         "EventCode": "0x36",
         "EventName": "UNC_CHA_TOR_OCCUPANCY.CXL_MISS_ITOMWR",
+        "Experimental": "1",
         "PerPkg": "1",
         "UMask": "0x78cc4ffe20",
         "Unit": "CHA"
     },
     {
         "BriefDescription": "TOR Occupancy for MemPushWr transactions from a CXL device which miss the L3.",
+        "Counter": "0",
         "EventCode": "0x36",
         "EventName": "UNC_CHA_TOR_OCCUPANCY.CXL_MISS_MEMPUSHWR",
+        "Experimental": "1",
         "PerPkg": "1",
         "UMask": "0x78cc6ffe20",
         "Unit": "CHA"
     },
     {
         "BriefDescription": "TOR Occupancy for WCiL transactions from a CXL device which miss the L3.",
+        "Counter": "0",
         "EventCode": "0x36",
         "EventName": "UNC_CHA_TOR_OCCUPANCY.CXL_MISS_WCIL",
+        "Experimental": "1",
         "PerPkg": "1",
         "UMask": "0x78c86ffe20",
         "Unit": "CHA"
     },
     {
         "BriefDescription": "TOR Occupancy for WcilF transactions from a CXL device which miss the L3.",
+        "Counter": "0",
         "EventCode": "0x36",
         "EventName": "UNC_CHA_TOR_OCCUPANCY.CXL_MISS_WCILF",
+        "Experimental": "1",
         "PerPkg": "1",
         "UMask": "0x78c867fe20",
         "Unit": "CHA"
     },
     {
         "BriefDescription": "TOR Occupancy for WiL transactions from a CXL device which miss the L3.",
+        "Counter": "0",
         "EventCode": "0x36",
         "EventName": "UNC_CHA_TOR_OCCUPANCY.CXL_MISS_WIL",
+        "Experimental": "1",
         "PerPkg": "1",
         "UMask": "0x78c87ffe20",
         "Unit": "CHA"
     },
     {
         "BriefDescription": "TOR Occupancy for All locally initiated requests from IA Cores",
+        "Counter": "0",
         "EventCode": "0x36",
         "EventName": "UNC_CHA_TOR_OCCUPANCY.IA",
+        "Experimental": "1",
         "PerPkg": "1",
         "PublicDescription": "TOR Occupancy : All requests from iA Cores",
         "UMask": "0xc001ff01",
@@ -1969,6 +2399,7 @@
     },
     {
         "BriefDescription": "TOR Occupancy for CLFlush events that are initiated from the Core",
+        "Counter": "0",
         "EventCode": "0x36",
         "EventName": "UNC_CHA_TOR_OCCUPANCY.IA_CLFLUSH",
         "PerPkg": "1",
@@ -1978,6 +2409,7 @@
     },
     {
         "BriefDescription": "TOR Occupancy for CLFlushOpt events that are initiated from the Core",
+        "Counter": "0",
         "EventCode": "0x36",
         "EventName": "UNC_CHA_TOR_OCCUPANCY.IA_CLFLUSHOPT",
         "PerPkg": "1",
@@ -1987,6 +2419,7 @@
     },
     {
         "BriefDescription": "TOR Occupancy for Code read from local IA that miss the cache",
+        "Counter": "0",
         "EventCode": "0x36",
         "EventName": "UNC_CHA_TOR_OCCUPANCY.IA_CRD",
         "PerPkg": "1",
@@ -1996,6 +2429,7 @@
     },
     {
         "BriefDescription": "TOR Occupancy for Code read prefetch from local IA that miss the cache",
+        "Counter": "0",
         "EventCode": "0x36",
         "EventName": "UNC_CHA_TOR_OCCUPANCY.IA_CRD_PREF",
         "PerPkg": "1",
@@ -2005,6 +2439,7 @@
     },
     {
         "BriefDescription": "TOR Occupancy for Data read opt from local IA that miss the cache",
+        "Counter": "0",
         "EventCode": "0x36",
         "EventName": "UNC_CHA_TOR_OCCUPANCY.IA_DRD_OPT",
         "PerPkg": "1",
@@ -2014,8 +2449,10 @@
     },
     {
         "BriefDescription": "TOR Occupancy for Data read opt prefetch from local IA that miss the cache",
+        "Counter": "0",
         "EventCode": "0x36",
         "EventName": "UNC_CHA_TOR_OCCUPANCY.IA_DRD_OPT_PREF",
+        "Experimental": "1",
         "PerPkg": "1",
         "PublicDescription": "TOR Occupancy : DRd_Opt_Prefs issued by iA Cores",
         "UMask": "0xc8a7ff01",
@@ -2023,8 +2460,10 @@
     },
     {
         "BriefDescription": "TOR Occupancy for All locally initiated requests from IA Cores which hit the cache",
+        "Counter": "0",
         "EventCode": "0x36",
         "EventName": "UNC_CHA_TOR_OCCUPANCY.IA_HIT",
+        "Experimental": "1",
         "PerPkg": "1",
         "PublicDescription": "TOR Occupancy : All requests from iA Cores that Hit the LLC",
         "UMask": "0xc001fd01",
@@ -2032,6 +2471,7 @@
     },
     {
         "BriefDescription": "TOR Occupancy for Code read from local IA that hit the cache",
+        "Counter": "0",
         "EventCode": "0x36",
         "EventName": "UNC_CHA_TOR_OCCUPANCY.IA_HIT_CRD",
         "PerPkg": "1",
@@ -2041,6 +2481,7 @@
     },
     {
         "BriefDescription": "TOR Occupancy for Code read prefetch from local IA that hit the cache",
+        "Counter": "0",
         "EventCode": "0x36",
         "EventName": "UNC_CHA_TOR_OCCUPANCY.IA_HIT_CRD_PREF",
         "PerPkg": "1",
@@ -2050,6 +2491,7 @@
     },
     {
         "BriefDescription": "TOR Occupancy for All requests issued from IA cores to CXL accelerator memory regions that hit the LLC.",
+        "Counter": "0",
         "EventCode": "0x36",
         "EventName": "UNC_CHA_TOR_OCCUPANCY.IA_HIT_CXL_ACC",
         "PerPkg": "1",
@@ -2058,6 +2500,7 @@
     },
     {
         "BriefDescription": "TOR Occupancy for Data read opt from local IA that hit the cache",
+        "Counter": "0",
         "EventCode": "0x36",
         "EventName": "UNC_CHA_TOR_OCCUPANCY.IA_HIT_DRD_OPT",
         "PerPkg": "1",
@@ -2067,6 +2510,7 @@
     },
     {
         "BriefDescription": "TOR Occupancy for Data read opt prefetch from local IA that hit the cache",
+        "Counter": "0",
         "EventCode": "0x36",
         "EventName": "UNC_CHA_TOR_OCCUPANCY.IA_HIT_DRD_OPT_PREF",
         "PerPkg": "1",
@@ -2076,6 +2520,7 @@
     },
     {
         "BriefDescription": "TOR Occupancy for ItoM requests from local IA cores that hit the cache",
+        "Counter": "0",
         "EventCode": "0x36",
         "EventName": "UNC_CHA_TOR_OCCUPANCY.IA_HIT_ITOM",
         "PerPkg": "1",
@@ -2085,6 +2530,7 @@
     },
     {
         "BriefDescription": "TOR Occupancy for Last level cache prefetch code read from local IA that hit the cache",
+        "Counter": "0",
         "EventCode": "0x36",
         "EventName": "UNC_CHA_TOR_OCCUPANCY.IA_HIT_LLCPREFCODE",
         "PerPkg": "1",
@@ -2094,6 +2540,7 @@
     },
     {
         "BriefDescription": "TOR Occupancy for Last level cache prefetch data read from local IA that hit the cache",
+        "Counter": "0",
         "EventCode": "0x36",
         "EventName": "UNC_CHA_TOR_OCCUPANCY.IA_HIT_LLCPREFDATA",
         "PerPkg": "1",
@@ -2103,6 +2550,7 @@
     },
     {
         "BriefDescription": "TOR Occupancy for Last level cache prefetch read for ownership from local IA that hit the cache",
+        "Counter": "0",
         "EventCode": "0x36",
         "EventName": "UNC_CHA_TOR_OCCUPANCY.IA_HIT_LLCPREFRFO",
         "PerPkg": "1",
@@ -2112,6 +2560,7 @@
     },
     {
         "BriefDescription": "TOR Occupancy for Read for ownership from local IA that hit the cache",
+        "Counter": "0",
         "EventCode": "0x36",
         "EventName": "UNC_CHA_TOR_OCCUPANCY.IA_HIT_RFO",
         "PerPkg": "1",
@@ -2121,6 +2570,7 @@
     },
     {
         "BriefDescription": "TOR Occupancy for Read for ownership prefetch from local IA that hit the cache",
+        "Counter": "0",
         "EventCode": "0x36",
         "EventName": "UNC_CHA_TOR_OCCUPANCY.IA_HIT_RFO_PREF",
         "PerPkg": "1",
@@ -2130,6 +2580,7 @@
     },
     {
         "BriefDescription": "TOR Occupancy for ItoM events that are initiated from the Core",
+        "Counter": "0",
         "EventCode": "0x36",
         "EventName": "UNC_CHA_TOR_OCCUPANCY.IA_ITOM",
         "PerPkg": "1",
@@ -2139,6 +2590,7 @@
     },
     {
         "BriefDescription": "TOR Occupancy for ItoMCacheNear requests from local IA cores",
+        "Counter": "0",
         "EventCode": "0x36",
         "EventName": "UNC_CHA_TOR_OCCUPANCY.IA_ITOMCACHENEAR",
         "PerPkg": "1",
@@ -2148,6 +2600,7 @@
     },
     {
         "BriefDescription": "TOR Occupancy for Last level cache prefetch code read from local IA.",
+        "Counter": "0",
         "EventCode": "0x36",
         "EventName": "UNC_CHA_TOR_OCCUPANCY.IA_LLCPREFCODE",
         "PerPkg": "1",
@@ -2157,6 +2610,7 @@
     },
     {
         "BriefDescription": "TOR Occupancy for Last level cache prefetch data read from local IA.",
+        "Counter": "0",
         "EventCode": "0x36",
         "EventName": "UNC_CHA_TOR_OCCUPANCY.IA_LLCPREFDATA",
         "PerPkg": "1",
@@ -2166,6 +2620,7 @@
     },
     {
         "BriefDescription": "TOR Occupancy for Last level cache prefetch read for ownership from local IA that miss the cache",
+        "Counter": "0",
         "EventCode": "0x36",
         "EventName": "UNC_CHA_TOR_OCCUPANCY.IA_LLCPREFRFO",
         "PerPkg": "1",
@@ -2175,8 +2630,10 @@
     },
     {
         "BriefDescription": "TOR Occupancy for All locally initiated requests from IA Cores which miss the cache",
+        "Counter": "0",
         "EventCode": "0x36",
         "EventName": "UNC_CHA_TOR_OCCUPANCY.IA_MISS",
+        "Experimental": "1",
         "PerPkg": "1",
         "PublicDescription": "TOR Occupancy : All requests from iA Cores that Missed the LLC",
         "UMask": "0xc001fe01",
@@ -2184,6 +2641,7 @@
     },
     {
         "BriefDescription": "TOR Occupancy for Code read from local IA that miss the cache",
+        "Counter": "0",
         "EventCode": "0x36",
         "EventName": "UNC_CHA_TOR_OCCUPANCY.IA_MISS_CRD",
         "PerPkg": "1",
@@ -2193,6 +2651,7 @@
     },
     {
         "BriefDescription": "TOR Occupancy for CRDs from local IA cores to locally homed memory",
+        "Counter": "0",
         "EventCode": "0x36",
         "EventName": "UNC_CHA_TOR_OCCUPANCY.IA_MISS_CRD_LOCAL",
         "PerPkg": "1",
@@ -2202,6 +2661,7 @@
     },
     {
         "BriefDescription": "TOR Occupancy for Code read prefetch from local IA that miss the cache",
+        "Counter": "0",
         "EventCode": "0x36",
         "EventName": "UNC_CHA_TOR_OCCUPANCY.IA_MISS_CRD_PREF",
         "PerPkg": "1",
@@ -2211,6 +2671,7 @@
     },
     {
         "BriefDescription": "TOR Occupancy for CRD Prefetches from local IA cores to locally homed memory",
+        "Counter": "0",
         "EventCode": "0x36",
         "EventName": "UNC_CHA_TOR_OCCUPANCY.IA_MISS_CRD_PREF_LOCAL",
         "PerPkg": "1",
@@ -2220,6 +2681,7 @@
     },
     {
         "BriefDescription": "TOR Occupancy for CRD Prefetches from local IA cores to remotely homed memory",
+        "Counter": "0",
         "EventCode": "0x36",
         "EventName": "UNC_CHA_TOR_OCCUPANCY.IA_MISS_CRD_PREF_REMOTE",
         "PerPkg": "1",
@@ -2229,6 +2691,7 @@
     },
     {
         "BriefDescription": "TOR Occupancy for CRDs from local IA cores to remotely homed memory",
+        "Counter": "0",
         "EventCode": "0x36",
         "EventName": "UNC_CHA_TOR_OCCUPANCY.IA_MISS_CRD_REMOTE",
         "PerPkg": "1",
@@ -2238,6 +2701,7 @@
     },
     {
         "BriefDescription": "TOR Occupancy for All requests issued from IA cores to CXL accelerator memory regions that miss the LLC.",
+        "Counter": "0",
         "EventCode": "0x36",
         "EventName": "UNC_CHA_TOR_OCCUPANCY.IA_MISS_CXL_ACC",
         "PerPkg": "1",
@@ -2246,6 +2710,7 @@
     },
     {
         "BriefDescription": "TOR Occupancy for DRds and equivalent opcodes issued from an IA core which miss the L3 and target memory in a CXL type 2 memory expander card.",
+        "Counter": "0",
         "EventCode": "0x36",
         "EventName": "UNC_CHA_TOR_OCCUPANCY.IA_MISS_DRD_CXL_ACC",
         "PerPkg": "1",
@@ -2254,6 +2719,7 @@
     },
     {
         "BriefDescription": "TOR Occupancy for Data read opt from local IA that miss the cache",
+        "Counter": "0",
         "EventCode": "0x36",
         "EventName": "UNC_CHA_TOR_OCCUPANCY.IA_MISS_DRD_OPT",
         "PerPkg": "1",
@@ -2263,6 +2729,7 @@
     },
     {
         "BriefDescription": "TOR Occupancy for Data read opt prefetch from local IA that miss the cache",
+        "Counter": "0",
         "EventCode": "0x36",
         "EventName": "UNC_CHA_TOR_OCCUPANCY.IA_MISS_DRD_OPT_PREF",
         "PerPkg": "1",
@@ -2272,6 +2739,7 @@
     },
     {
         "BriefDescription": "TOR Occupancy for L2 data prefetches issued from an IA core which miss the L3 and target memory in a CXL type 2 accelerator.",
+        "Counter": "0",
         "EventCode": "0x36",
         "EventName": "UNC_CHA_TOR_OCCUPANCY.IA_MISS_DRD_PREF_CXL_ACC",
         "PerPkg": "1",
@@ -2280,6 +2748,7 @@
     },
     {
         "BriefDescription": "TOR Occupancy for ItoM requests from local IA cores that miss the cache",
+        "Counter": "0",
         "EventCode": "0x36",
         "EventName": "UNC_CHA_TOR_OCCUPANCY.IA_MISS_ITOM",
         "PerPkg": "1",
@@ -2289,6 +2758,7 @@
     },
     {
         "BriefDescription": "TOR Occupancy for Last level cache prefetch code read from local IA that miss the cache",
+        "Counter": "0",
         "EventCode": "0x36",
         "EventName": "UNC_CHA_TOR_OCCUPANCY.IA_MISS_LLCPREFCODE",
         "PerPkg": "1",
@@ -2298,6 +2768,7 @@
     },
     {
         "BriefDescription": "TOR Occupancy for Last level cache prefetch data read from local IA that miss the cache",
+        "Counter": "0",
         "EventCode": "0x36",
         "EventName": "UNC_CHA_TOR_OCCUPANCY.IA_MISS_LLCPREFDATA",
         "PerPkg": "1",
@@ -2307,6 +2778,7 @@
     },
     {
         "BriefDescription": "TOR Occupancy for LLC data prefetches issued from an IA core which miss the L3 and target memory in a CXL type 2 accelerator.",
+        "Counter": "0",
         "EventCode": "0x36",
         "EventName": "UNC_CHA_TOR_OCCUPANCY.IA_MISS_LLCPREFDATA_CXL_ACC",
         "PerPkg": "1",
@@ -2315,6 +2787,7 @@
     },
     {
         "BriefDescription": "TOR Occupancy for Last level cache prefetch read for ownership from local IA that miss the cache",
+        "Counter": "0",
         "EventCode": "0x36",
         "EventName": "UNC_CHA_TOR_OCCUPANCY.IA_MISS_LLCPREFRFO",
         "PerPkg": "1",
@@ -2324,6 +2797,7 @@
     },
     {
         "BriefDescription": "TOR Occupancy for L2 RFO prefetches issued from an IA core which miss the L3 and target memory in a CXL type 2 accelerator.",
+        "Counter": "0",
         "EventCode": "0x36",
         "EventName": "UNC_CHA_TOR_OCCUPANCY.IA_MISS_LLCPREFRFO_CXL_ACC",
         "PerPkg": "1",
@@ -2332,6 +2806,7 @@
     },
     {
         "BriefDescription": "TOR Occupancy for WCILF requests from local IA cores to locally homed DDR addresses that miss the cache",
+        "Counter": "0",
         "EventCode": "0x36",
         "EventName": "UNC_CHA_TOR_OCCUPANCY.IA_MISS_LOCAL_WCILF_DDR",
         "PerPkg": "1",
@@ -2341,8 +2816,10 @@
     },
     {
         "BriefDescription": "TOR Occupancy for WCILF requests from local IA cores to locally homed PMM addresses which miss the cache",
+        "Counter": "0",
         "EventCode": "0x36",
         "EventName": "UNC_CHA_TOR_OCCUPANCY.IA_MISS_LOCAL_WCILF_PMM",
+        "Experimental": "1",
         "PerPkg": "1",
         "PublicDescription": "TOR Occupancy : WCiLFs issued by iA Cores targeting PMM that missed the LLC - HOMed locally",
         "UMask": "0xc8668a01",
@@ -2350,6 +2827,7 @@
     },
     {
         "BriefDescription": "TOR Occupancy for WCIL requests from local IA cores to locally homed DDR addresses that miss the cache",
+        "Counter": "0",
         "EventCode": "0x36",
         "EventName": "UNC_CHA_TOR_OCCUPANCY.IA_MISS_LOCAL_WCIL_DDR",
         "PerPkg": "1",
@@ -2359,8 +2837,10 @@
     },
     {
         "BriefDescription": "TOR Occupancy for WCIL requests from local IA cores to locally homed PMM addresses which miss the cache",
+        "Counter": "0",
         "EventCode": "0x36",
         "EventName": "UNC_CHA_TOR_OCCUPANCY.IA_MISS_LOCAL_WCIL_PMM",
+        "Experimental": "1",
         "PerPkg": "1",
         "PublicDescription": "TOR Occupancy : WCiLs issued by iA Cores targeting PMM that missed the LLC - HOMed locally",
         "UMask": "0xc86e8a01",
@@ -2368,6 +2848,7 @@
     },
     {
         "BriefDescription": "TOR Occupancy for WCILF requests from local IA cores to remotely homed DDR addresses that miss the cache",
+        "Counter": "0",
         "EventCode": "0x36",
         "EventName": "UNC_CHA_TOR_OCCUPANCY.IA_MISS_REMOTE_WCILF_DDR",
         "PerPkg": "1",
@@ -2377,8 +2858,10 @@
     },
     {
         "BriefDescription": "TOR Occupancy for WCILF requests from local IA cores to remotely homed PMM addresses which miss the cache",
+        "Counter": "0",
         "EventCode": "0x36",
         "EventName": "UNC_CHA_TOR_OCCUPANCY.IA_MISS_REMOTE_WCILF_PMM",
+        "Experimental": "1",
         "PerPkg": "1",
         "PublicDescription": "TOR Occupancy : WCiLFs issued by iA Cores targeting PMM that missed the LLC - HOMed remotely",
         "UMask": "0xc8670a01",
@@ -2386,6 +2869,7 @@
     },
     {
         "BriefDescription": "TOR Occupancy for WCIL requests from local IA cores to remotely homed DDR addresses that miss the cache",
+        "Counter": "0",
         "EventCode": "0x36",
         "EventName": "UNC_CHA_TOR_OCCUPANCY.IA_MISS_REMOTE_WCIL_DDR",
         "PerPkg": "1",
@@ -2395,8 +2879,10 @@
     },
     {
         "BriefDescription": "TOR Occupancy for WCIL requests from local IA cores to remotely homed PMM addresses which miss the cache",
+        "Counter": "0",
         "EventCode": "0x36",
         "EventName": "UNC_CHA_TOR_OCCUPANCY.IA_MISS_REMOTE_WCIL_PMM",
+        "Experimental": "1",
         "PerPkg": "1",
         "PublicDescription": "TOR Occupancy : WCiLs issued by iA Cores targeting PMM that missed the LLC - HOMed remotely",
         "UMask": "0xc86f0a01",
@@ -2404,6 +2890,7 @@
     },
     {
         "BriefDescription": "TOR Occupancy for Read for ownership from local IA that miss the cache",
+        "Counter": "0",
         "EventCode": "0x36",
         "EventName": "UNC_CHA_TOR_OCCUPANCY.IA_MISS_RFO",
         "PerPkg": "1",
@@ -2413,6 +2900,7 @@
     },
     {
         "BriefDescription": "TOR Occupancy for RFOs issued from an IA core which miss the L3 and target memory in a CXL type 2 accelerator.",
+        "Counter": "0",
         "EventCode": "0x36",
         "EventName": "UNC_CHA_TOR_OCCUPANCY.IA_MISS_RFO_CXL_ACC",
         "PerPkg": "1",
@@ -2421,6 +2909,7 @@
     },
     {
         "BriefDescription": "TOR Occupancy for Read for ownership from local IA that miss the cache",
+        "Counter": "0",
         "EventCode": "0x36",
         "EventName": "UNC_CHA_TOR_OCCUPANCY.IA_MISS_RFO_LOCAL",
         "PerPkg": "1",
@@ -2430,6 +2919,7 @@
     },
     {
         "BriefDescription": "TOR Occupancy for Read for ownership prefetch from local IA that miss the cache",
+        "Counter": "0",
         "EventCode": "0x36",
         "EventName": "UNC_CHA_TOR_OCCUPANCY.IA_MISS_RFO_PREF",
         "PerPkg": "1",
@@ -2439,6 +2929,7 @@
     },
     {
         "BriefDescription": "TOR Occupancy for LLC RFO prefetches issued from an IA core which miss the L3 and target memory in a CXL type 2 accelerator.",
+        "Counter": "0",
         "EventCode": "0x36",
         "EventName": "UNC_CHA_TOR_OCCUPANCY.IA_MISS_RFO_PREF_CXL_ACC",
         "PerPkg": "1",
@@ -2447,6 +2938,7 @@
     },
     {
         "BriefDescription": "TOR Occupancy for Read for ownership prefetch from local IA that miss the cache",
+        "Counter": "0",
         "EventCode": "0x36",
         "EventName": "UNC_CHA_TOR_OCCUPANCY.IA_MISS_RFO_PREF_LOCAL",
         "PerPkg": "1",
@@ -2456,6 +2948,7 @@
     },
     {
         "BriefDescription": "TOR Occupancy for Read for ownership prefetch from local IA that miss the cache",
+        "Counter": "0",
         "EventCode": "0x36",
         "EventName": "UNC_CHA_TOR_OCCUPANCY.IA_MISS_RFO_PREF_REMOTE",
         "PerPkg": "1",
@@ -2465,6 +2958,7 @@
     },
     {
         "BriefDescription": "TOR Occupancy for Read for ownership from local IA that miss the cache",
+        "Counter": "0",
         "EventCode": "0x36",
         "EventName": "UNC_CHA_TOR_OCCUPANCY.IA_MISS_RFO_REMOTE",
         "PerPkg": "1",
@@ -2474,6 +2968,7 @@
     },
     {
         "BriefDescription": "TOR Occupancy for UCRDF requests from local IA cores that miss the cache",
+        "Counter": "0",
         "EventCode": "0x36",
         "EventName": "UNC_CHA_TOR_OCCUPANCY.IA_MISS_UCRDF",
         "PerPkg": "1",
@@ -2483,6 +2978,7 @@
     },
     {
         "BriefDescription": "TOR Occupancy for WCIL requests from a local IA core that miss the cache",
+        "Counter": "0",
         "EventCode": "0x36",
         "EventName": "UNC_CHA_TOR_OCCUPANCY.IA_MISS_WCIL",
         "PerPkg": "1",
@@ -2492,6 +2988,7 @@
     },
     {
         "BriefDescription": "TOR Occupancy for WCILF requests from local IA core that miss the cache",
+        "Counter": "0",
         "EventCode": "0x36",
         "EventName": "UNC_CHA_TOR_OCCUPANCY.IA_MISS_WCILF",
         "PerPkg": "1",
@@ -2501,6 +2998,7 @@
     },
     {
         "BriefDescription": "TOR Occupancy for WCILF requests from local IA cores to DDR homed addresses which miss the cache",
+        "Counter": "0",
         "EventCode": "0x36",
         "EventName": "UNC_CHA_TOR_OCCUPANCY.IA_MISS_WCILF_DDR",
         "PerPkg": "1",
@@ -2510,8 +3008,10 @@
     },
     {
         "BriefDescription": "TOR Occupancy for WCILF requests from local IA cores to PMM homed addresses which miss the cache",
+        "Counter": "0",
         "EventCode": "0x36",
         "EventName": "UNC_CHA_TOR_OCCUPANCY.IA_MISS_WCILF_PMM",
+        "Experimental": "1",
         "PerPkg": "1",
         "PublicDescription": "TOR Occupancy : WCiLFs issued by iA Cores targeting PMM that missed the LLC",
         "UMask": "0xc8678a01",
@@ -2519,6 +3019,7 @@
     },
     {
         "BriefDescription": "TOR Occupancy for WCIL requests from local IA cores to DDR homed addresses which miss the cache",
+        "Counter": "0",
         "EventCode": "0x36",
         "EventName": "UNC_CHA_TOR_OCCUPANCY.IA_MISS_WCIL_DDR",
         "PerPkg": "1",
@@ -2528,8 +3029,10 @@
     },
     {
         "BriefDescription": "TOR Occupancy for WCIL requests from a local IA core to PMM homed addresses that miss the cache",
+        "Counter": "0",
         "EventCode": "0x36",
         "EventName": "UNC_CHA_TOR_OCCUPANCY.IA_MISS_WCIL_PMM",
+        "Experimental": "1",
         "PerPkg": "1",
         "PublicDescription": "TOR Occupancy : WCiLs issued by iA Cores targeting PMM that missed the LLC",
         "UMask": "0xc86f8a01",
@@ -2537,6 +3040,7 @@
     },
     {
         "BriefDescription": "TOR Occupancy for WIL requests from local IA cores that miss the cache",
+        "Counter": "0",
         "EventCode": "0x36",
         "EventName": "UNC_CHA_TOR_OCCUPANCY.IA_MISS_WIL",
         "PerPkg": "1",
@@ -2546,6 +3050,7 @@
     },
     {
         "BriefDescription": "TOR Occupancy for Read for ownership from local IA that miss the cache",
+        "Counter": "0",
         "EventCode": "0x36",
         "EventName": "UNC_CHA_TOR_OCCUPANCY.IA_RFO",
         "PerPkg": "1",
@@ -2555,6 +3060,7 @@
     },
     {
         "BriefDescription": "TOR Occupancy for Read for ownership prefetch from local IA that miss the cache",
+        "Counter": "0",
         "EventCode": "0x36",
         "EventName": "UNC_CHA_TOR_OCCUPANCY.IA_RFO_PREF",
         "PerPkg": "1",
@@ -2564,6 +3070,7 @@
     },
     {
         "BriefDescription": "TOR Occupancy for SpecItoM events that are initiated from the Core",
+        "Counter": "0",
         "EventCode": "0x36",
         "EventName": "UNC_CHA_TOR_OCCUPANCY.IA_SPECITOM",
         "PerPkg": "1",
@@ -2573,6 +3080,7 @@
     },
     {
         "BriefDescription": "TOR Occupancy for WbMtoI requests from local IA cores",
+        "Counter": "0",
         "EventCode": "0x36",
         "EventName": "UNC_CHA_TOR_OCCUPANCY.IA_WBMTOI",
         "PerPkg": "1",
@@ -2582,6 +3090,7 @@
     },
     {
         "BriefDescription": "TOR Occupancy for WCIL requests from a local IA core",
+        "Counter": "0",
         "EventCode": "0x36",
         "EventName": "UNC_CHA_TOR_OCCUPANCY.IA_WCIL",
         "PerPkg": "1",
@@ -2591,6 +3100,7 @@
     },
     {
         "BriefDescription": "TOR Occupancy for WCILF requests from local IA core",
+        "Counter": "0",
         "EventCode": "0x36",
         "EventName": "UNC_CHA_TOR_OCCUPANCY.IA_WCILF",
         "PerPkg": "1",
@@ -2600,8 +3110,10 @@
     },
     {
         "BriefDescription": "TOR Occupancy for All TOR inserts from local IO devices",
+        "Counter": "0",
         "EventCode": "0x36",
         "EventName": "UNC_CHA_TOR_OCCUPANCY.IO",
+        "Experimental": "1",
         "PerPkg": "1",
         "PublicDescription": "TOR Occupancy : All requests from IO Devices",
         "UMask": "0xc001ff04",
@@ -2609,6 +3121,7 @@
     },
     {
         "BriefDescription": "TOR Occupancy for CLFlush requests from IO devices",
+        "Counter": "0",
         "EventCode": "0x36",
         "EventName": "UNC_CHA_TOR_OCCUPANCY.IO_CLFLUSH",
         "PerPkg": "1",
@@ -2618,8 +3131,10 @@
     },
     {
         "BriefDescription": "TOR Occupancy for All TOR inserts from local IO devices which hit the cache",
+        "Counter": "0",
         "EventCode": "0x36",
         "EventName": "UNC_CHA_TOR_OCCUPANCY.IO_HIT",
+        "Experimental": "1",
         "PerPkg": "1",
         "PublicDescription": "TOR Occupancy : All requests from IO Devices that hit the LLC",
         "UMask": "0xc001fd04",
@@ -2627,6 +3142,7 @@
     },
     {
         "BriefDescription": "TOR Occupancy for ItoMs from local IO devices which hit the cache",
+        "Counter": "0",
         "EventCode": "0x36",
         "EventName": "UNC_CHA_TOR_OCCUPANCY.IO_HIT_ITOM",
         "PerPkg": "1",
@@ -2636,6 +3152,7 @@
     },
     {
         "BriefDescription": "TOR Occupancy for ItoMCacheNears, indicating a partial write request, from IO Devices that hit the LLC",
+        "Counter": "0",
         "EventCode": "0x36",
         "EventName": "UNC_CHA_TOR_OCCUPANCY.IO_HIT_ITOMCACHENEAR",
         "PerPkg": "1",
@@ -2645,6 +3162,7 @@
     },
     {
         "BriefDescription": "TOR Occupancy for PCIRDCURs issued by IO devices which hit the LLC",
+        "Counter": "0",
         "EventCode": "0x36",
         "EventName": "UNC_CHA_TOR_OCCUPANCY.IO_HIT_PCIRDCUR",
         "PerPkg": "1",
@@ -2654,6 +3172,7 @@
     },
     {
         "BriefDescription": "TOR Occupancy for RFOs from local IO devices which hit the cache",
+        "Counter": "0",
         "EventCode": "0x36",
         "EventName": "UNC_CHA_TOR_OCCUPANCY.IO_HIT_RFO",
         "PerPkg": "1",
@@ -2663,6 +3182,7 @@
     },
     {
         "BriefDescription": "TOR Occupancy for All TOR ItoM inserts from local IO devices",
+        "Counter": "0",
         "EventCode": "0x36",
         "EventName": "UNC_CHA_TOR_OCCUPANCY.IO_ITOM",
         "PerPkg": "1",
@@ -2672,6 +3192,7 @@
     },
     {
         "BriefDescription": "TOR Occupancy for ItoMCacheNears, indicating a partial write request, from IO Devices",
+        "Counter": "0",
         "EventCode": "0x36",
         "EventName": "UNC_CHA_TOR_OCCUPANCY.IO_ITOMCACHENEAR",
         "PerPkg": "1",
@@ -2681,8 +3202,10 @@
     },
     {
         "BriefDescription": "TOR Occupancy for All TOR inserts from local IO devices which miss the cache",
+        "Counter": "0",
         "EventCode": "0x36",
         "EventName": "UNC_CHA_TOR_OCCUPANCY.IO_MISS",
+        "Experimental": "1",
         "PerPkg": "1",
         "PublicDescription": "TOR Occupancy : All requests from IO Devices that missed the LLC",
         "UMask": "0xc001fe04",
@@ -2690,6 +3213,7 @@
     },
     {
         "BriefDescription": "TOR Occupancy for All TOR ItoM inserts from local IO devices which miss the cache",
+        "Counter": "0",
         "EventCode": "0x36",
         "EventName": "UNC_CHA_TOR_OCCUPANCY.IO_MISS_ITOM",
         "PerPkg": "1",
@@ -2699,6 +3223,7 @@
     },
     {
         "BriefDescription": "TOR Occupancy for ItoMCacheNears, indicating a partial write request, from IO Devices that missed the LLC",
+        "Counter": "0",
         "EventCode": "0x36",
         "EventName": "UNC_CHA_TOR_OCCUPANCY.IO_MISS_ITOMCACHENEAR",
         "PerPkg": "1",
@@ -2708,8 +3233,10 @@
     },
     {
         "BriefDescription": "TOR Occupancy for ItoMCacheNear transactions from an IO device on the local socket that miss the cache",
+        "Counter": "0",
         "EventCode": "0x36",
         "EventName": "UNC_CHA_TOR_OCCUPANCY.IO_MISS_ITOMCACHENEAR_LOCAL",
+        "Experimental": "1",
         "PerPkg": "1",
         "PublicDescription": "TOR Occupancy : ItoMCacheNears, indicating a partial write request, from IO Devices that missed the LLC",
         "UMask": "0xcd42fe04",
@@ -2717,8 +3244,10 @@
     },
     {
         "BriefDescription": "TOR Occupancy for ItoMCacheNear transactions from an IO device on a remote socket that miss the cache",
+        "Counter": "0",
         "EventCode": "0x36",
         "EventName": "UNC_CHA_TOR_OCCUPANCY.IO_MISS_ITOMCACHENEAR_REMOTE",
+        "Experimental": "1",
         "PerPkg": "1",
         "PublicDescription": "TOR Occupancy : ItoMCacheNears, indicating a partial write request, from IO Devices that missed the LLC",
         "UMask": "0xcd437e04",
@@ -2726,8 +3255,10 @@
     },
     {
         "BriefDescription": "TOR Occupancy for ItoM transactions from an IO device on the local socket that miss the cache",
+        "Counter": "0",
         "EventCode": "0x36",
         "EventName": "UNC_CHA_TOR_OCCUPANCY.IO_MISS_ITOM_LOCAL",
+        "Experimental": "1",
         "PerPkg": "1",
         "PublicDescription": "TOR Occupancy : ItoMs issued by IO Devices that missed the LLC",
         "UMask": "0xcc42fe04",
@@ -2735,8 +3266,10 @@
     },
     {
         "BriefDescription": "TOR Occupancy for ItoM transactions from an IO device on a remote socket that miss the cache",
+        "Counter": "0",
         "EventCode": "0x36",
         "EventName": "UNC_CHA_TOR_OCCUPANCY.IO_MISS_ITOM_REMOTE",
+        "Experimental": "1",
         "PerPkg": "1",
         "PublicDescription": "TOR Occupancy : ItoMs issued by IO Devices that missed the LLC",
         "UMask": "0xcc437e04",
@@ -2744,6 +3277,7 @@
     },
     {
         "BriefDescription": "TOR Occupancy for PCIRDCURs issued by IO devices which miss the LLC",
+        "Counter": "0",
         "EventCode": "0x36",
         "EventName": "UNC_CHA_TOR_OCCUPANCY.IO_MISS_PCIRDCUR",
         "PerPkg": "1",
@@ -2753,8 +3287,10 @@
     },
     {
         "BriefDescription": "TOR Occupancy for PCIRDCUR transactions from an IO device on the local socket that miss the cache",
+        "Counter": "0",
         "EventCode": "0x36",
         "EventName": "UNC_CHA_TOR_OCCUPANCY.IO_MISS_PCIRDCUR_LOCAL",
+        "Experimental": "1",
         "PerPkg": "1",
         "PublicDescription": "TOR Occupancy : PCIRdCurs issued by IO Devices that missed the LLC",
         "UMask": "0xc8f2fe04",
@@ -2762,8 +3298,10 @@
     },
     {
         "BriefDescription": "TOR Occupancy for PCIRDCUR transactions from an IO device on a remote socket that miss the cache",
+        "Counter": "0",
         "EventCode": "0x36",
         "EventName": "UNC_CHA_TOR_OCCUPANCY.IO_MISS_PCIRDCUR_REMOTE",
+        "Experimental": "1",
         "PerPkg": "1",
         "PublicDescription": "TOR Occupancy : PCIRdCurs issued by IO Devices that missed the LLC",
         "UMask": "0xc8f37e04",
@@ -2771,6 +3309,7 @@
     },
     {
         "BriefDescription": "TOR Occupancy for All TOR RFO inserts from local IO devices which miss the cache",
+        "Counter": "0",
         "EventCode": "0x36",
         "EventName": "UNC_CHA_TOR_OCCUPANCY.IO_MISS_RFO",
         "PerPkg": "1",
@@ -2780,6 +3319,7 @@
     },
     {
         "BriefDescription": "TOR Occupancy for PCIRDCURs issued by IO devices",
+        "Counter": "0",
         "EventCode": "0x36",
         "EventName": "UNC_CHA_TOR_OCCUPANCY.IO_PCIRDCUR",
         "PerPkg": "1",
@@ -2789,6 +3329,7 @@
     },
     {
         "BriefDescription": "TOR Occupancy for RFOs from local IO devices",
+        "Counter": "0",
         "EventCode": "0x36",
         "EventName": "UNC_CHA_TOR_OCCUPANCY.IO_RFO",
         "PerPkg": "1",
@@ -2798,6 +3339,7 @@
     },
     {
         "BriefDescription": "TOR Occupancy for WBMtoI requests from IO devices",
+        "Counter": "0",
         "EventCode": "0x36",
         "EventName": "UNC_CHA_TOR_OCCUPANCY.IO_WBMTOI",
         "PerPkg": "1",
@@ -2807,8 +3349,10 @@
     },
     {
         "BriefDescription": "TOR Occupancy for All locally initiated requests",
+        "Counter": "0",
         "EventCode": "0x36",
         "EventName": "UNC_CHA_TOR_OCCUPANCY.LOC_ALL",
+        "Experimental": "1",
         "PerPkg": "1",
         "PublicDescription": "TOR Occupancy : All from Local iA and IO",
         "UMask": "0xc000ff05",
@@ -2816,8 +3360,10 @@
     },
     {
         "BriefDescription": "TOR Occupancy for All from Local iA",
+        "Counter": "0",
         "EventCode": "0x36",
         "EventName": "UNC_CHA_TOR_OCCUPANCY.LOC_IA",
+        "Experimental": "1",
         "PerPkg": "1",
         "PublicDescription": "TOR Occupancy : All from Local iA",
         "UMask": "0xc000ff01",
@@ -2825,8 +3371,10 @@
     },
     {
         "BriefDescription": "TOR Occupancy for All from Local IO",
+        "Counter": "0",
         "EventCode": "0x36",
         "EventName": "UNC_CHA_TOR_OCCUPANCY.LOC_IO",
+        "Experimental": "1",
         "PerPkg": "1",
         "PublicDescription": "TOR Occupancy : All from Local IO",
         "UMask": "0xc000ff04",
@@ -2834,8 +3382,10 @@
     },
     {
         "BriefDescription": "TOR Occupancy for All remote requests (e.g. snoops, writebacks) that came from remote sockets",
+        "Counter": "0",
         "EventCode": "0x36",
         "EventName": "UNC_CHA_TOR_OCCUPANCY.REM_ALL",
+        "Experimental": "1",
         "PerPkg": "1",
         "PublicDescription": "TOR Occupancy : All Remote Requests",
         "UMask": "0xc001ffc8",
@@ -2843,8 +3393,10 @@
     },
     {
         "BriefDescription": "TOR Occupancy for All snoops to this LLC that came from remote sockets",
+        "Counter": "0",
         "EventCode": "0x36",
         "EventName": "UNC_CHA_TOR_OCCUPANCY.REM_SNPS",
+        "Experimental": "1",
         "PerPkg": "1",
         "PublicDescription": "TOR Occupancy : All Snoops from Remote",
         "UMask": "0xc001ff08",

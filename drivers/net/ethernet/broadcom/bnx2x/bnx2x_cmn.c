@@ -3059,7 +3059,7 @@ int bnx2x_nic_unload(struct bnx2x *bp, int unload_mode, bool keep_link)
 
 	bp->rx_mode = BNX2X_RX_MODE_NONE;
 
-	del_timer_sync(&bp->timer);
+	timer_delete_sync(&bp->timer);
 
 	if (IS_PF(bp) && !BP_NOMCP(bp)) {
 		/* Set ALWAYS_ALIVE bit in shmem */
@@ -4902,7 +4902,7 @@ int bnx2x_change_mtu(struct net_device *dev, int new_mtu)
 	 * because the actual alloc size is
 	 * only updated as part of load
 	 */
-	dev->mtu = new_mtu;
+	WRITE_ONCE(dev->mtu, new_mtu);
 
 	if (!bnx2x_mtu_allows_gro(new_mtu))
 		dev->features &= ~NETIF_F_GRO_HW;

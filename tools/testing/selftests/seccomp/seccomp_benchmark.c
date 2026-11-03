@@ -1,6 +1,6 @@
 /*
  * Strictly speaking, this is not a test. But it can report during test
- * runs so relative performace can be measured.
+ * runs so relative performance can be measured.
  */
 #define _GNU_SOURCE
 #include <assert.h>
@@ -194,14 +194,14 @@ int main(int argc, char *argv[])
 	ksft_set_plan(7);
 
 	ksft_print_msg("Running on:\n");
-	ksft_print_msg("");
+	ksft_print_msg("%s", "");
 	system("uname -a");
 
 	ksft_print_msg("Current BPF sysctl settings:\n");
 	/* Avoid using "sysctl" which may not be installed. */
-	ksft_print_msg("");
+	ksft_print_msg("%s", "");
 	system("grep -H . /proc/sys/net/core/bpf_jit_enable");
-	ksft_print_msg("");
+	ksft_print_msg("%s", "");
 	system("grep -H . /proc/sys/net/core/bpf_jit_harden");
 
 	affinity();

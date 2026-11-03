@@ -3,6 +3,7 @@
  * Copyright © 2023 Intel Corporation
  */
 
+#include <linux/export.h>
 #include <linux/ref_tracker.h>
 #include <linux/types.h>
 
@@ -191,7 +192,7 @@ struct drm_dp_tunnel_mgr {
 	struct drm_dp_tunnel_group *groups;
 	wait_queue_head_t bw_req_queue;
 
-#ifdef CONFIG_DRM_DISPLAY_DEBUG_DP_TUNNEL_STATE
+#ifdef CONFIG_DRM_DISPLAY_DP_TUNNEL_STATE_DEBUG
 	struct ref_tracker_dir ref_tracker;
 #endif
 };
@@ -222,7 +223,7 @@ static int read_tunnel_regs(struct drm_dp_aux *aux, struct drm_dp_tunnel_regs *r
 	while ((len = next_reg_area(&offset))) {
 		int address = DP_TUNNELING_BASE + offset;
 
-		if (drm_dp_dpcd_read(aux, address, tunnel_reg_ptr(regs, address), len) < 0)
+		if (drm_dp_dpcd_read_data(aux, address, tunnel_reg_ptr(regs, address), len) < 0)
 			return -EIO;
 
 		offset += len;
@@ -385,7 +386,7 @@ static void tunnel_put(struct drm_dp_tunnel *tunnel)
 	kref_put(&tunnel->kref, free_tunnel);
 }
 
-#ifdef CONFIG_DRM_DISPLAY_DEBUG_DP_TUNNEL_STATE
+#ifdef CONFIG_DRM_DISPLAY_DP_TUNNEL_STATE_DEBUG
 static void track_tunnel_ref(struct drm_dp_tunnel *tunnel,
 			     struct ref_tracker **tracker)
 {
@@ -436,8 +437,8 @@ EXPORT_SYMBOL(drm_dp_tunnel_get);
 
 /**
  * drm_dp_tunnel_put - Put a reference for a DP tunnel
- * @tunnel - Tunnel object
- * @tracker - Debug tracker for the reference
+ * @tunnel: Tunnel object
+ * @tracker: Debug tracker for the reference
  *
  * Put a reference for @tunnel along with its debug *@tracker, which
  * was obtained with drm_dp_tunnel_get().
@@ -913,7 +914,7 @@ static int set_bw_alloc_mode(struct drm_dp_tunnel *tunnel, bool enable)
 	u8 mask = DP_DISPLAY_DRIVER_BW_ALLOCATION_MODE_ENABLE | DP_UNMASK_BW_ALLOCATION_IRQ;
 	u8 val;
 
-	if (drm_dp_dpcd_readb(tunnel->aux, DP_DPTX_BW_ALLOCATION_MODE_CONTROL, &val) < 0)
+	if (drm_dp_dpcd_read_byte(tunnel->aux, DP_DPTX_BW_ALLOCATION_MODE_CONTROL, &val) < 0)
 		goto out_err;
 
 	if (enable)
@@ -921,7 +922,7 @@ static int set_bw_alloc_mode(struct drm_dp_tunnel *tunnel, bool enable)
 	else
 		val &= ~mask;
 
-	if (drm_dp_dpcd_writeb(tunnel->aux, DP_DPTX_BW_ALLOCATION_MODE_CONTROL, val) < 0)
+	if (drm_dp_dpcd_write_byte(tunnel->aux, DP_DPTX_BW_ALLOCATION_MODE_CONTROL, val) < 0)
 		goto out_err;
 
 	tunnel->bw_alloc_enabled = enable;
@@ -1039,7 +1040,7 @@ static int clear_bw_req_state(struct drm_dp_aux *aux)
 {
 	u8 bw_req_mask = DP_BW_REQUEST_SUCCEEDED | DP_BW_REQUEST_FAILED;
 
-	if (drm_dp_dpcd_writeb(aux, DP_TUNNELING_STATUS, bw_req_mask) < 0)
+	if (drm_dp_dpcd_write_byte(aux, DP_TUNNELING_STATUS, bw_req_mask) < 0)
 		return -EIO;
 
 	return 0;
@@ -1052,7 +1053,7 @@ static int bw_req_complete(struct drm_dp_aux *aux, bool *status_changed)
 	u8 val;
 	int err;
 
-	if (drm_dp_dpcd_readb(aux, DP_TUNNELING_STATUS, &val) < 0)
+	if (drm_dp_dpcd_read_byte(aux, DP_TUNNELING_STATUS, &val) < 0)
 		return -EIO;
 
 	*status_changed = val & status_change_mask;
@@ -1095,7 +1096,7 @@ static int allocate_tunnel_bw(struct drm_dp_tunnel *tunnel, int bw)
 	if (err)
 		goto out;
 
-	if (drm_dp_dpcd_writeb(tunnel->aux, DP_REQUEST_BW, request_bw) < 0) {
+	if (drm_dp_dpcd_write_byte(tunnel->aux, DP_REQUEST_BW, request_bw) < 0) {
 		err = -EIO;
 		goto out;
 	}
@@ -1170,7 +1171,7 @@ int drm_dp_tunnel_alloc_bw(struct drm_dp_tunnel *tunnel, int bw)
 EXPORT_SYMBOL(drm_dp_tunnel_alloc_bw);
 
 /**
- * drm_dp_tunnel_atomic_get_allocated_bw - Get the BW allocated for a DP tunnel
+ * drm_dp_tunnel_get_allocated_bw - Get the BW allocated for a DP tunnel
  * @tunnel: Tunnel object
  *
  * Get the current BW allocated for @tunnel. After the tunnel is created /
@@ -1196,13 +1197,13 @@ static int check_and_clear_status_change(struct drm_dp_tunnel *tunnel)
 	u8 mask = DP_BW_ALLOCATION_CAPABILITY_CHANGED | DP_ESTIMATED_BW_CHANGED;
 	u8 val;
 
-	if (drm_dp_dpcd_readb(tunnel->aux, DP_TUNNELING_STATUS, &val) < 0)
+	if (drm_dp_dpcd_read_byte(tunnel->aux, DP_TUNNELING_STATUS, &val) < 0)
 		goto out_err;
 
 	val &= mask;
 
 	if (val) {
-		if (drm_dp_dpcd_writeb(tunnel->aux, DP_TUNNELING_STATUS, val) < 0)
+		if (drm_dp_dpcd_write_byte(tunnel->aux, DP_TUNNELING_STATUS, val) < 0)
 			goto out_err;
 
 		return 1;
@@ -1215,7 +1216,7 @@ static int check_and_clear_status_change(struct drm_dp_tunnel *tunnel)
 	 * Check for estimated BW changes explicitly to account for lost
 	 * BW change notifications.
 	 */
-	if (drm_dp_dpcd_readb(tunnel->aux, DP_ESTIMATED_BW, &val) < 0)
+	if (drm_dp_dpcd_read_byte(tunnel->aux, DP_ESTIMATED_BW, &val) < 0)
 		goto out_err;
 
 	if (val * tunnel->bw_granularity != tunnel->estimated_bw)
@@ -1300,7 +1301,7 @@ int drm_dp_tunnel_handle_irq(struct drm_dp_tunnel_mgr *mgr, struct drm_dp_aux *a
 {
 	u8 val;
 
-	if (drm_dp_dpcd_readb(aux, DP_TUNNELING_STATUS, &val) < 0)
+	if (drm_dp_dpcd_read_byte(aux, DP_TUNNELING_STATUS, &val) < 0)
 		return -EIO;
 
 	if (val & (DP_BW_REQUEST_SUCCEEDED | DP_BW_REQUEST_FAILED))
@@ -1603,7 +1604,7 @@ static void cleanup_group(struct drm_dp_tunnel_group *group)
 	drm_atomic_private_obj_fini(&group->base);
 }
 
-#ifdef CONFIG_DRM_DISPLAY_DEBUG_DP_TUNNEL_STATE
+#ifdef CONFIG_DRM_DISPLAY_DP_TUNNEL_STATE_DEBUG
 static void check_unique_stream_ids(const struct drm_dp_tunnel_group_state *group_state)
 {
 	const struct drm_dp_tunnel_state *tunnel_state;
@@ -1881,7 +1882,7 @@ static void destroy_mgr(struct drm_dp_tunnel_mgr *mgr)
 		drm_WARN_ON(mgr->dev, !list_empty(&mgr->groups[i].tunnels));
 	}
 
-#ifdef CONFIG_DRM_DISPLAY_DEBUG_DP_TUNNEL_STATE
+#ifdef CONFIG_DRM_DISPLAY_DP_TUNNEL_STATE_DEBUG
 	ref_tracker_dir_exit(&mgr->ref_tracker);
 #endif
 
@@ -1892,11 +1893,12 @@ static void destroy_mgr(struct drm_dp_tunnel_mgr *mgr)
 /**
  * drm_dp_tunnel_mgr_create - Create a DP tunnel manager
  * @dev: DRM device object
+ * @max_group_count: Maximum number of tunnel groups
  *
  * Creates a DP tunnel manager for @dev.
  *
- * Returns a pointer to the tunnel manager if created successfully or NULL in
- * case of an error.
+ * Returns a pointer to the tunnel manager if created successfully or error
+ * pointer in case of failure.
  */
 struct drm_dp_tunnel_mgr *
 drm_dp_tunnel_mgr_create(struct drm_device *dev, int max_group_count)
@@ -1906,7 +1908,7 @@ drm_dp_tunnel_mgr_create(struct drm_device *dev, int max_group_count)
 
 	mgr = kzalloc(sizeof(*mgr), GFP_KERNEL);
 	if (!mgr)
-		return NULL;
+		return ERR_PTR(-ENOMEM);
 
 	mgr->dev = dev;
 	init_waitqueue_head(&mgr->bw_req_queue);
@@ -1915,18 +1917,18 @@ drm_dp_tunnel_mgr_create(struct drm_device *dev, int max_group_count)
 	if (!mgr->groups) {
 		kfree(mgr);
 
-		return NULL;
+		return ERR_PTR(-ENOMEM);
 	}
 
-#ifdef CONFIG_DRM_DISPLAY_DEBUG_DP_TUNNEL_STATE
-	ref_tracker_dir_init(&mgr->ref_tracker, 16, "dptun");
+#ifdef CONFIG_DRM_DISPLAY_DP_TUNNEL_STATE_DEBUG
+	ref_tracker_dir_init(&mgr->ref_tracker, 16, "drm_dptun");
 #endif
 
 	for (i = 0; i < max_group_count; i++) {
 		if (!init_group(mgr, &mgr->groups[i])) {
 			destroy_mgr(mgr);
 
-			return NULL;
+			return ERR_PTR(-ENOMEM);
 		}
 
 		mgr->group_count++;

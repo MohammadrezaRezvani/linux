@@ -158,15 +158,16 @@ static int gve_clean_xdp_done(struct gve_priv *priv, struct gve_tx_ring *tx,
 			      u32 to_do)
 {
 	struct gve_tx_buffer_state *info;
-	u32 clean_end = tx->done + to_do;
 	u64 pkts = 0, bytes = 0;
 	size_t space_freed = 0;
 	u32 xsk_complete = 0;
 	u32 idx;
+	int i;
 
-	for (; tx->done < clean_end; tx->done++) {
+	for (i = 0; i < to_do; i++) {
 		idx = tx->done & tx->mask;
 		info = &tx->info[idx];
+		tx->done++;
 
 		if (unlikely(!info->xdp.size))
 			continue;
@@ -205,7 +206,10 @@ void gve_tx_stop_ring_gqi(struct gve_priv *priv, int idx)
 		return;
 
 	gve_remove_napi(priv, ntfy_idx);
-	gve_clean_tx_done(priv, tx, priv->tx_desc_cnt, false);
+	if (tx->q_num < priv->tx_cfg.num_queues)
+		gve_clean_tx_done(priv, tx, priv->tx_desc_cnt, false);
+	else
+		gve_clean_xdp_done(priv, tx, priv->tx_desc_cnt);
 	netdev_tx_reset_queue(tx->netdev_txq);
 	gve_tx_remove_from_block(priv, idx);
 }
@@ -216,6 +220,7 @@ static void gve_tx_free_ring_gqi(struct gve_priv *priv, struct gve_tx_ring *tx,
 	struct device *hdev = &priv->pdev->dev;
 	int idx = tx->q_num;
 	size_t bytes;
+	u32 qpl_id;
 	u32 slots;
 
 	slots = tx->mask + 1;
@@ -223,9 +228,12 @@ static void gve_tx_free_ring_gqi(struct gve_priv *priv, struct gve_tx_ring *tx,
 			  tx->q_resources, tx->q_resources_bus);
 	tx->q_resources = NULL;
 
-	if (!tx->raw_addressing) {
-		gve_tx_fifo_release(priv, &tx->tx_fifo);
-		gve_unassign_qpl(cfg->qpl_cfg, tx->tx_fifo.qpl->id);
+	if (tx->tx_fifo.qpl) {
+		if (tx->tx_fifo.base)
+			gve_tx_fifo_release(priv, &tx->tx_fifo);
+
+		qpl_id = gve_tx_qpl_id(priv, tx->q_num);
+		gve_free_queue_page_list(priv, tx->tx_fifo.qpl, qpl_id);
 		tx->tx_fifo.qpl = NULL;
 	}
 
@@ -256,6 +264,8 @@ static int gve_tx_alloc_ring_gqi(struct gve_priv *priv,
 				 int idx)
 {
 	struct device *hdev = &priv->pdev->dev;
+	int qpl_page_cnt;
+	u32 qpl_id = 0;
 	size_t bytes;
 
 	/* Make sure everything is zeroed to start */
@@ -280,9 +290,14 @@ static int gve_tx_alloc_ring_gqi(struct gve_priv *priv,
 	tx->raw_addressing = cfg->raw_addressing;
 	tx->dev = hdev;
 	if (!tx->raw_addressing) {
-		tx->tx_fifo.qpl = gve_assign_tx_qpl(cfg, idx);
+		qpl_id = gve_tx_qpl_id(priv, tx->q_num);
+		qpl_page_cnt = priv->tx_pages_per_qpl;
+
+		tx->tx_fifo.qpl = gve_alloc_queue_page_list(priv, qpl_id,
+							    qpl_page_cnt);
 		if (!tx->tx_fifo.qpl)
 			goto abort_with_desc;
+
 		/* map Tx FIFO */
 		if (gve_tx_fifo_init(priv, &tx->tx_fifo))
 			goto abort_with_qpl;
@@ -302,8 +317,10 @@ abort_with_fifo:
 	if (!tx->raw_addressing)
 		gve_tx_fifo_release(priv, &tx->tx_fifo);
 abort_with_qpl:
-	if (!tx->raw_addressing)
-		gve_unassign_qpl(cfg->qpl_cfg, tx->tx_fifo.qpl->id);
+	if (!tx->raw_addressing) {
+		gve_free_queue_page_list(priv, tx->tx_fifo.qpl, qpl_id);
+		tx->tx_fifo.qpl = NULL;
+	}
 abort_with_desc:
 	dma_free_coherent(hdev, bytes, tx->desc, tx->bus);
 	tx->desc = NULL;
@@ -317,33 +334,23 @@ int gve_tx_alloc_rings_gqi(struct gve_priv *priv,
 			   struct gve_tx_alloc_rings_cfg *cfg)
 {
 	struct gve_tx_ring *tx = cfg->tx;
+	int total_queues;
 	int err = 0;
 	int i, j;
 
-	if (!cfg->raw_addressing && !cfg->qpls) {
-		netif_err(priv, drv, priv->dev,
-			  "Cannot alloc QPL ring before allocing QPLs\n");
-		return -EINVAL;
-	}
-
-	if (cfg->start_idx + cfg->num_rings > cfg->qcfg->max_queues) {
+	total_queues = cfg->qcfg->num_queues + cfg->num_xdp_rings;
+	if (total_queues > cfg->qcfg->max_queues) {
 		netif_err(priv, drv, priv->dev,
 			  "Cannot alloc more than the max num of Tx rings\n");
 		return -EINVAL;
 	}
 
-	if (cfg->start_idx == 0) {
-		tx = kvcalloc(cfg->qcfg->max_queues, sizeof(struct gve_tx_ring),
-			      GFP_KERNEL);
-		if (!tx)
-			return -ENOMEM;
-	} else if (!tx) {
-		netif_err(priv, drv, priv->dev,
-			  "Cannot alloc tx rings from a nonzero start idx without tx array\n");
-		return -EINVAL;
-	}
+	tx = kvcalloc(cfg->qcfg->max_queues, sizeof(struct gve_tx_ring),
+		      GFP_KERNEL);
+	if (!tx)
+		return -ENOMEM;
 
-	for (i = cfg->start_idx; i < cfg->start_idx + cfg->num_rings; i++) {
+	for (i = 0; i < total_queues; i++) {
 		err = gve_tx_alloc_ring_gqi(priv, cfg, &tx[i], i);
 		if (err) {
 			netif_err(priv, drv, priv->dev,
@@ -359,8 +366,7 @@ int gve_tx_alloc_rings_gqi(struct gve_priv *priv,
 cleanup:
 	for (j = 0; j < i; j++)
 		gve_tx_free_ring_gqi(priv, &tx[j], cfg);
-	if (cfg->start_idx == 0)
-		kvfree(tx);
+	kvfree(tx);
 	return err;
 }
 
@@ -373,13 +379,11 @@ void gve_tx_free_rings_gqi(struct gve_priv *priv,
 	if (!tx)
 		return;
 
-	for (i = cfg->start_idx; i < cfg->start_idx + cfg->num_rings; i++)
+	for (i = 0; i < cfg->qcfg->num_queues + cfg->qcfg->num_xdp_queues; i++)
 		gve_tx_free_ring_gqi(priv, &tx[i], cfg);
 
-	if (cfg->start_idx == 0) {
-		kvfree(tx);
-		cfg->tx = NULL;
-	}
+	kvfree(tx);
+	cfg->tx = NULL;
 }
 
 /* gve_tx_avail - Calculates the number of slots available in the ring
@@ -819,18 +823,21 @@ static int gve_tx_fill_xdp(struct gve_priv *priv, struct gve_tx_ring *tx,
 	return ndescs;
 }
 
-int gve_xdp_xmit(struct net_device *dev, int n, struct xdp_frame **frames,
-		 u32 flags)
+int gve_xdp_xmit_gqi(struct net_device *dev, int n, struct xdp_frame **frames,
+		     u32 flags)
 {
 	struct gve_priv *priv = netdev_priv(dev);
 	struct gve_tx_ring *tx;
 	int i, err = 0, qid;
 
-	if (unlikely(flags & ~XDP_XMIT_FLAGS_MASK))
+	if (unlikely(flags & ~XDP_XMIT_FLAGS_MASK) || !priv->xdp_prog)
 		return -EINVAL;
 
+	if (!gve_get_napi_enabled(priv))
+		return -ENETDOWN;
+
 	qid = gve_xdp_tx_queue_id(priv,
-				  smp_processor_id() % priv->num_xdp_queues);
+				  smp_processor_id() % priv->tx_cfg.num_xdp_queues);
 
 	tx = &priv->tx[qid];
 
@@ -945,13 +952,9 @@ static int gve_xsk_tx(struct gve_priv *priv, struct gve_tx_ring *tx,
 
 	spin_lock(&tx->xdp_lock);
 	while (sent < budget) {
-		if (!gve_can_tx(tx, GVE_TX_START_THRESH))
+		if (!gve_can_tx(tx, GVE_TX_START_THRESH) ||
+		    !xsk_tx_peek_desc(tx->xsk_pool, &desc))
 			goto out;
-
-		if (!xsk_tx_peek_desc(tx->xsk_pool, &desc)) {
-			tx->xdp_xsk_done = tx->xdp_xsk_wakeup;
-			goto out;
-		}
 
 		data = xsk_buff_raw_get_data(tx->xsk_pool, desc.addr);
 		nsegs = gve_tx_fill_xdp(priv, tx, data, desc.len, NULL, true);
@@ -967,33 +970,41 @@ out:
 	return sent;
 }
 
+int gve_xsk_tx_poll(struct gve_notify_block *rx_block, int budget)
+{
+	struct gve_rx_ring *rx = rx_block->rx;
+	struct gve_priv *priv = rx->gve;
+	struct gve_tx_ring *tx;
+	int sent = 0;
+
+	tx = &priv->tx[gve_xdp_tx_queue_id(priv, rx->q_num)];
+	if (tx->xsk_pool) {
+		sent = gve_xsk_tx(priv, tx, budget);
+
+		u64_stats_update_begin(&tx->statss);
+		tx->xdp_xsk_sent += sent;
+		u64_stats_update_end(&tx->statss);
+		if (xsk_uses_need_wakeup(tx->xsk_pool))
+			xsk_set_tx_need_wakeup(tx->xsk_pool);
+	}
+
+	return sent;
+}
+
 bool gve_xdp_poll(struct gve_notify_block *block, int budget)
 {
 	struct gve_priv *priv = block->priv;
 	struct gve_tx_ring *tx = block->tx;
 	u32 nic_done;
-	bool repoll;
 	u32 to_do;
 
 	/* Find out how much work there is to be done */
 	nic_done = gve_tx_load_event_counter(priv, tx);
 	to_do = min_t(u32, (nic_done - tx->done), budget);
 	gve_clean_xdp_done(priv, tx, to_do);
-	repoll = nic_done != tx->done;
-
-	if (tx->xsk_pool) {
-		int sent = gve_xsk_tx(priv, tx, budget);
-
-		u64_stats_update_begin(&tx->statss);
-		tx->xdp_xsk_sent += sent;
-		u64_stats_update_end(&tx->statss);
-		repoll |= (sent == budget);
-		if (xsk_uses_need_wakeup(tx->xsk_pool))
-			xsk_set_tx_need_wakeup(tx->xsk_pool);
-	}
 
 	/* If we still have work we want to repoll */
-	return repoll;
+	return nic_done != tx->done;
 }
 
 bool gve_tx_poll(struct gve_notify_block *block, int budget)

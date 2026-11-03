@@ -53,8 +53,6 @@ static int rtl92cu_init_sw_vars(struct ieee80211_hw *hw)
 	} else {
 		fw_name = "rtlwifi/rtl8192cufw_TMSC.bin";
 	}
-	/* provide name of alternative file */
-	rtlpriv->cfg->alt_fw_name = "rtlwifi/rtl8192cufw.bin";
 	pr_info("Loading firmware %s\n", fw_name);
 	rtlpriv->max_fw_size = 0x4000;
 	err = request_firmware_nowait(THIS_MODULE, 1,
@@ -83,7 +81,7 @@ static bool rtl92cu_get_btc_status(void)
 	return false;
 }
 
-static struct rtl_hal_ops rtl8192cu_hal_ops = {
+static const struct rtl_hal_ops rtl8192cu_hal_ops = {
 	.init_sw_vars = rtl92cu_init_sw_vars,
 	.deinit_sw_vars = rtl92cu_deinit_sw_vars,
 	.read_chip_version = rtl92c_read_chip_version,
@@ -158,8 +156,9 @@ static struct rtl_hal_usbint_cfg rtl92cu_interface_cfg = {
 	.usb_mq_to_hwq = rtl8192cu_mq_to_hwq,
 };
 
-static struct rtl_hal_cfg rtl92cu_hal_cfg = {
+static const struct rtl_hal_cfg rtl92cu_hal_cfg = {
 	.name = "rtl92c_usb",
+	.alt_fw_name = "rtlwifi/rtl8192cufw.bin",
 	.ops = &rtl8192cu_hal_ops,
 	.mod_params = &rtl92cu_mod_params,
 	.usb_interface_cfg = &rtl92cu_interface_cfg,

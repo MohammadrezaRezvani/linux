@@ -1352,10 +1352,10 @@ static int rt5651_set_dai_fmt(struct snd_soc_dai *dai, unsigned int fmt)
 	unsigned int reg_val = 0;
 
 	switch (fmt & SND_SOC_DAIFMT_MASTER_MASK) {
-	case SND_SOC_DAIFMT_CBM_CFM:
+	case SND_SOC_DAIFMT_CBP_CFP:
 		rt5651->master[dai->id] = 1;
 		break;
-	case SND_SOC_DAIFMT_CBS_CFS:
+	case SND_SOC_DAIFMT_CBC_CFC:
 		reg_val |= RT5651_I2S_MS_S;
 		rt5651->master[dai->id] = 0;
 		break;
@@ -2184,22 +2184,22 @@ static const struct regmap_config rt5651_regmap = {
 #if defined(CONFIG_OF)
 static const struct of_device_id rt5651_of_match[] = {
 	{ .compatible = "realtek,rt5651", },
-	{},
+	{ }
 };
 MODULE_DEVICE_TABLE(of, rt5651_of_match);
 #endif
 
 #ifdef CONFIG_ACPI
 static const struct acpi_device_id rt5651_acpi_match[] = {
-	{ "10EC5651", 0 },
-	{ "10EC5640", 0 },
-	{ },
+	{ "10EC5640" },
+	{ "10EC5651" },
+	{ }
 };
 MODULE_DEVICE_TABLE(acpi, rt5651_acpi_match);
 #endif
 
 static const struct i2c_device_id rt5651_i2c_id[] = {
-	{ "rt5651", 0 },
+	{ "rt5651" },
 	{ }
 };
 MODULE_DEVICE_TABLE(i2c, rt5651_i2c_id);

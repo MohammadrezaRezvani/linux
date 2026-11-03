@@ -4,7 +4,10 @@
 #ifndef _ICE_FLOW_H_
 #define _ICE_FLOW_H_
 
+#include <linux/net/intel/libie/pctype.h>
+
 #include "ice_flex_type.h"
+#include "ice_parser.h"
 
 #define ICE_FLOW_ENTRY_HANDLE_INVAL	0
 #define ICE_FLOW_FLD_OFF_INVAL		0xffff
@@ -263,57 +266,27 @@ enum ice_flow_field {
 #define ICE_FLOW_HASH_FLD_GTPU_DWN_TEID \
 	BIT_ULL(ICE_FLOW_FIELD_IDX_GTPU_DWN_TEID)
 
-/* Flow headers and fields for AVF support */
-enum ice_flow_avf_hdr_field {
-	/* Values 0 - 28 are reserved for future use */
-	ICE_AVF_FLOW_FIELD_INVALID		= 0,
-	ICE_AVF_FLOW_FIELD_UNICAST_IPV4_UDP	= 29,
-	ICE_AVF_FLOW_FIELD_MULTICAST_IPV4_UDP,
-	ICE_AVF_FLOW_FIELD_IPV4_UDP,
-	ICE_AVF_FLOW_FIELD_IPV4_TCP_SYN_NO_ACK,
-	ICE_AVF_FLOW_FIELD_IPV4_TCP,
-	ICE_AVF_FLOW_FIELD_IPV4_SCTP,
-	ICE_AVF_FLOW_FIELD_IPV4_OTHER,
-	ICE_AVF_FLOW_FIELD_FRAG_IPV4,
-	/* Values 37-38 are reserved */
-	ICE_AVF_FLOW_FIELD_UNICAST_IPV6_UDP	= 39,
-	ICE_AVF_FLOW_FIELD_MULTICAST_IPV6_UDP,
-	ICE_AVF_FLOW_FIELD_IPV6_UDP,
-	ICE_AVF_FLOW_FIELD_IPV6_TCP_SYN_NO_ACK,
-	ICE_AVF_FLOW_FIELD_IPV6_TCP,
-	ICE_AVF_FLOW_FIELD_IPV6_SCTP,
-	ICE_AVF_FLOW_FIELD_IPV6_OTHER,
-	ICE_AVF_FLOW_FIELD_FRAG_IPV6,
-	ICE_AVF_FLOW_FIELD_RSVD47,
-	ICE_AVF_FLOW_FIELD_FCOE_OX,
-	ICE_AVF_FLOW_FIELD_FCOE_RX,
-	ICE_AVF_FLOW_FIELD_FCOE_OTHER,
-	/* Values 51-62 are reserved */
-	ICE_AVF_FLOW_FIELD_L2_PAYLOAD		= 63,
-	ICE_AVF_FLOW_FIELD_MAX
-};
-
 /* Supported RSS offloads  This macro is defined to support
- * VIRTCHNL_OP_GET_RSS_HENA_CAPS ops. PF driver sends the RSS hardware
+ * VIRTCHNL_OP_GET_RSS_HASHCFG_CAPS ops. PF driver sends the RSS hardware
  * capabilities to the caller of this ops.
  */
-#define ICE_DEFAULT_RSS_HENA ( \
-	BIT_ULL(ICE_AVF_FLOW_FIELD_IPV4_UDP) | \
-	BIT_ULL(ICE_AVF_FLOW_FIELD_IPV4_SCTP) | \
-	BIT_ULL(ICE_AVF_FLOW_FIELD_IPV4_TCP) | \
-	BIT_ULL(ICE_AVF_FLOW_FIELD_IPV4_OTHER) | \
-	BIT_ULL(ICE_AVF_FLOW_FIELD_FRAG_IPV4) | \
-	BIT_ULL(ICE_AVF_FLOW_FIELD_IPV6_UDP) | \
-	BIT_ULL(ICE_AVF_FLOW_FIELD_IPV6_TCP) | \
-	BIT_ULL(ICE_AVF_FLOW_FIELD_IPV6_SCTP) | \
-	BIT_ULL(ICE_AVF_FLOW_FIELD_IPV6_OTHER) | \
-	BIT_ULL(ICE_AVF_FLOW_FIELD_FRAG_IPV6) | \
-	BIT_ULL(ICE_AVF_FLOW_FIELD_IPV4_TCP_SYN_NO_ACK) | \
-	BIT_ULL(ICE_AVF_FLOW_FIELD_UNICAST_IPV4_UDP) | \
-	BIT_ULL(ICE_AVF_FLOW_FIELD_MULTICAST_IPV4_UDP) | \
-	BIT_ULL(ICE_AVF_FLOW_FIELD_IPV6_TCP_SYN_NO_ACK) | \
-	BIT_ULL(ICE_AVF_FLOW_FIELD_UNICAST_IPV6_UDP) | \
-	BIT_ULL(ICE_AVF_FLOW_FIELD_MULTICAST_IPV6_UDP))
+#define ICE_DEFAULT_RSS_HASHCFG ( \
+	BIT_ULL(LIBIE_FILTER_PCTYPE_NONF_IPV4_UDP) | \
+	BIT_ULL(LIBIE_FILTER_PCTYPE_NONF_IPV4_SCTP) | \
+	BIT_ULL(LIBIE_FILTER_PCTYPE_NONF_IPV4_TCP) | \
+	BIT_ULL(LIBIE_FILTER_PCTYPE_NONF_IPV4_OTHER) | \
+	BIT_ULL(LIBIE_FILTER_PCTYPE_FRAG_IPV4) | \
+	BIT_ULL(LIBIE_FILTER_PCTYPE_NONF_IPV6_UDP) | \
+	BIT_ULL(LIBIE_FILTER_PCTYPE_NONF_IPV6_TCP) | \
+	BIT_ULL(LIBIE_FILTER_PCTYPE_NONF_IPV6_SCTP) | \
+	BIT_ULL(LIBIE_FILTER_PCTYPE_NONF_IPV6_OTHER) | \
+	BIT_ULL(LIBIE_FILTER_PCTYPE_FRAG_IPV6) | \
+	BIT_ULL(LIBIE_FILTER_PCTYPE_NONF_IPV4_TCP_SYN_NO_ACK) | \
+	BIT_ULL(LIBIE_FILTER_PCTYPE_NONF_UNICAST_IPV4_UDP) | \
+	BIT_ULL(LIBIE_FILTER_PCTYPE_NONF_MULTICAST_IPV4_UDP) | \
+	BIT_ULL(LIBIE_FILTER_PCTYPE_NONF_IPV6_TCP_SYN_NO_ACK) | \
+	BIT_ULL(LIBIE_FILTER_PCTYPE_NONF_UNICAST_IPV6_UDP) | \
+	BIT_ULL(LIBIE_FILTER_PCTYPE_NONF_MULTICAST_IPV6_UDP))
 
 enum ice_rss_cfg_hdr_type {
 	ICE_RSS_OUTER_HEADERS, /* take outer headers as inputset. */
@@ -326,6 +299,7 @@ enum ice_rss_cfg_hdr_type {
 	ICE_RSS_ANY_HEADERS
 };
 
+struct ice_vsi;
 struct ice_rss_hash_cfg {
 	u32 addl_hdrs; /* protocol header fields */
 	u64 hash_flds; /* hash bit field (ICE_FLOW_HASH_*) to configure */
@@ -444,6 +418,9 @@ ice_flow_add_prof(struct ice_hw *hw, enum ice_block blk, enum ice_flow_dir dir,
 		  struct ice_flow_seg_info *segs, u8 segs_cnt,
 		  bool symm, struct ice_flow_prof **prof);
 int ice_flow_rem_prof(struct ice_hw *hw, enum ice_block blk, u64 prof_id);
+int
+ice_flow_set_parser_prof(struct ice_hw *hw, u16 dest_vsi, u16 fdir_vsi,
+			 struct ice_parser_profile *prof, enum ice_block blk);
 int
 ice_flow_add_entry(struct ice_hw *hw, enum ice_block blk, u64 prof_id,
 		   u64 entry_id, u16 vsi, enum ice_flow_priority prio,

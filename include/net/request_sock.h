@@ -18,6 +18,7 @@
 #include <linux/refcount.h>
 
 #include <net/sock.h>
+#include <net/rstreason.h>
 
 struct request_sock;
 struct sk_buff;
@@ -29,17 +30,14 @@ struct request_sock_ops {
 	unsigned int	obj_size;
 	struct kmem_cache	*slab;
 	char		*slab_name;
-	int		(*rtx_syn_ack)(const struct sock *sk,
-				       struct request_sock *req);
 	void		(*send_ack)(const struct sock *sk, struct sk_buff *skb,
 				    struct request_sock *req);
 	void		(*send_reset)(const struct sock *sk,
-				      struct sk_buff *skb);
+				      struct sk_buff *skb,
+				      enum sk_rst_reason reason);
 	void		(*destructor)(struct request_sock *req);
 	void		(*syn_ack_timeout)(const struct request_sock *req);
 };
-
-int inet_rtx_syn_ack(const struct sock *parent, struct request_sock *req);
 
 struct saved_syn {
 	u32 mac_hdrlen;
@@ -61,7 +59,11 @@ struct request_sock {
 	struct request_sock		*dl_next;
 	u16				mss;
 	u8				num_retrans; /* number of retransmits */
-	u8				syncookie:1; /* syncookie: encode tcpopts in timestamp */
+	u8				syncookie:1; /* True if
+						      * 1) tcpopts needs to be encoded in
+						      *    TS of SYN+ACK
+						      * 2) ACK is validated by BPF kfunc.
+						      */
 	u8				num_timeout:7; /* number of timeouts */
 	u32				ts_recent;
 	struct timer_list		rsk_timer;
@@ -122,37 +124,6 @@ static inline struct sock *skb_steal_sock(struct sk_buff *skb,
 	return sk;
 }
 
-static inline struct request_sock *
-reqsk_alloc(const struct request_sock_ops *ops, struct sock *sk_listener,
-	    bool attach_listener)
-{
-	struct request_sock *req;
-
-	req = kmem_cache_alloc(ops->slab, GFP_ATOMIC | __GFP_NOWARN);
-	if (!req)
-		return NULL;
-	req->rsk_listener = NULL;
-	if (attach_listener) {
-		if (unlikely(!refcount_inc_not_zero(&sk_listener->sk_refcnt))) {
-			kmem_cache_free(ops->slab, req);
-			return NULL;
-		}
-		req->rsk_listener = sk_listener;
-	}
-	req->rsk_ops = ops;
-	req_to_sk(req)->sk_prot = sk_listener->sk_prot;
-	sk_node_init(&req_to_sk(req)->sk_node);
-	sk_tx_queue_clear(req_to_sk(req));
-	req->saved_syn = NULL;
-	req->timeout = 0;
-	req->num_timeout = 0;
-	req->num_retrans = 0;
-	req->sk = NULL;
-	refcount_set(&req->rsk_refcnt, 0);
-
-	return req;
-}
-
 static inline void __reqsk_free(struct request_sock *req)
 {
 	req->rsk_ops->destructor(req);
@@ -164,14 +135,14 @@ static inline void __reqsk_free(struct request_sock *req)
 
 static inline void reqsk_free(struct request_sock *req)
 {
-	WARN_ON_ONCE(refcount_read(&req->rsk_refcnt) != 0);
+	DEBUG_NET_WARN_ON_ONCE(refcount_read(&req->rsk_refcnt) != 0);
 	__reqsk_free(req);
 }
 
 static inline void reqsk_put(struct request_sock *req)
 {
 	if (refcount_dec_and_test(&req->rsk_refcnt))
-		reqsk_free(req);
+		__reqsk_free(req);
 }
 
 /*
@@ -277,4 +248,16 @@ static inline int reqsk_queue_len_young(const struct request_sock_queue *queue)
 	return atomic_read(&queue->young);
 }
 
+/* RFC 7323 2.3 Using the Window Scale Option
+ *  The window field (SEG.WND) of every outgoing segment, with the
+ *  exception of <SYN> segments, MUST be right-shifted by
+ *  Rcv.Wind.Shift bits.
+ *
+ * This means the SEG.WND carried in SYNACK can not exceed 65535.
+ * We use this property to harden TCP stack while in NEW_SYN_RECV state.
+ */
+static inline u32 tcp_synack_window(const struct request_sock *req)
+{
+	return min(req->rsk_rcv_wnd, 65535U);
+}
 #endif /* _REQUEST_SOCK_H */

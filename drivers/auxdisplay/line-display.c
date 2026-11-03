@@ -8,7 +8,9 @@
  * Copyright (C) 2021 Glider bv
  */
 
+#ifndef CONFIG_PANEL_BOOT_MESSAGE
 #include <generated/utsrelease.h>
+#endif
 
 #include <linux/container_of.h>
 #include <linux/device.h>
@@ -38,7 +40,7 @@
  */
 static void linedisp_scroll(struct timer_list *t)
 {
-	struct linedisp *linedisp = from_timer(linedisp, t, timer);
+	struct linedisp *linedisp = timer_container_of(linedisp, t, timer);
 	unsigned int i, ch = linedisp->scroll_pos;
 	unsigned int num_chars = linedisp->num_chars;
 
@@ -82,7 +84,7 @@ static int linedisp_display(struct linedisp *linedisp, const char *msg,
 	char *new_msg;
 
 	/* stop the scroll timer */
-	del_timer_sync(&linedisp->timer);
+	timer_delete_sync(&linedisp->timer);
 
 	if (count == -1)
 		count = strlen(msg);
@@ -181,7 +183,7 @@ static ssize_t scroll_step_ms_store(struct device *dev,
 
 	linedisp->scroll_rate = msecs_to_jiffies(ms);
 	if (linedisp->message && linedisp->message_len > linedisp->num_chars) {
-		del_timer_sync(&linedisp->timer);
+		timer_delete_sync(&linedisp->timer);
 		if (linedisp->scroll_rate)
 			linedisp_scroll(&linedisp->timer);
 	}
@@ -312,6 +314,12 @@ static int linedisp_init_map(struct linedisp *linedisp)
 	return 0;
 }
 
+#ifdef CONFIG_PANEL_BOOT_MESSAGE
+#define LINEDISP_INIT_TEXT CONFIG_PANEL_BOOT_MESSAGE
+#else
+#define LINEDISP_INIT_TEXT "Linux " UTS_RELEASE "       "
+#endif
+
 /**
  * linedisp_register - register a character line display
  * @linedisp: pointer to character line display structure
@@ -359,7 +367,7 @@ int linedisp_register(struct linedisp *linedisp, struct device *parent,
 		goto out_del_timer;
 
 	/* display a default message */
-	err = linedisp_display(linedisp, "Linux " UTS_RELEASE "       ", -1);
+	err = linedisp_display(linedisp, LINEDISP_INIT_TEXT, -1);
 	if (err)
 		goto out_del_dev;
 
@@ -368,12 +376,12 @@ int linedisp_register(struct linedisp *linedisp, struct device *parent,
 out_del_dev:
 	device_del(&linedisp->dev);
 out_del_timer:
-	del_timer_sync(&linedisp->timer);
+	timer_delete_sync(&linedisp->timer);
 out_put_device:
 	put_device(&linedisp->dev);
 	return err;
 }
-EXPORT_SYMBOL_NS_GPL(linedisp_register, LINEDISP);
+EXPORT_SYMBOL_NS_GPL(linedisp_register, "LINEDISP");
 
 /**
  * linedisp_unregister - unregister a character line display
@@ -383,9 +391,10 @@ EXPORT_SYMBOL_NS_GPL(linedisp_register, LINEDISP);
 void linedisp_unregister(struct linedisp *linedisp)
 {
 	device_del(&linedisp->dev);
-	del_timer_sync(&linedisp->timer);
+	timer_delete_sync(&linedisp->timer);
 	put_device(&linedisp->dev);
 }
-EXPORT_SYMBOL_NS_GPL(linedisp_unregister, LINEDISP);
+EXPORT_SYMBOL_NS_GPL(linedisp_unregister, "LINEDISP");
 
+MODULE_DESCRIPTION("Character line display core support");
 MODULE_LICENSE("GPL");

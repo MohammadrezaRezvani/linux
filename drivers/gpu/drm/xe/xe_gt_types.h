@@ -6,10 +6,15 @@
 #ifndef _XE_GT_TYPES_H_
 #define _XE_GT_TYPES_H_
 
+#include "xe_device_types.h"
 #include "xe_force_wake_types.h"
 #include "xe_gt_idle_types.h"
+#include "xe_gt_sriov_pf_types.h"
+#include "xe_gt_sriov_vf_types.h"
+#include "xe_gt_stats_types.h"
 #include "xe_hw_engine_types.h"
 #include "xe_hw_fence_types.h"
+#include "xe_oa_types.h"
 #include "xe_reg_sr_types.h"
 #include "xe_sa_types.h"
 #include "xe_uc_types.h"
@@ -24,11 +29,20 @@ enum xe_gt_type {
 	XE_GT_TYPE_MEDIA,
 };
 
-#define XE_MAX_DSS_FUSE_REGS	3
-#define XE_MAX_EU_FUSE_REGS	1
+enum xe_gt_eu_type {
+	XE_GT_EU_TYPE_SIMD8,
+	XE_GT_EU_TYPE_SIMD16,
+};
 
-typedef unsigned long xe_dss_mask_t[BITS_TO_LONGS(32 * XE_MAX_DSS_FUSE_REGS)];
-typedef unsigned long xe_eu_mask_t[BITS_TO_LONGS(32 * XE_MAX_EU_FUSE_REGS)];
+#define XE_MAX_DSS_FUSE_REGS		3
+#define XE_MAX_DSS_FUSE_BITS		(32 * XE_MAX_DSS_FUSE_REGS)
+#define XE_MAX_EU_FUSE_REGS		1
+#define XE_MAX_EU_FUSE_BITS		(32 * XE_MAX_EU_FUSE_REGS)
+#define XE_MAX_L3_BANK_MASK_BITS	64
+
+typedef unsigned long xe_dss_mask_t[BITS_TO_LONGS(XE_MAX_DSS_FUSE_BITS)];
+typedef unsigned long xe_eu_mask_t[BITS_TO_LONGS(XE_MAX_EU_FUSE_BITS)];
+typedef unsigned long xe_l3_bank_mask_t[BITS_TO_LONGS(XE_MAX_L3_BANK_MASK_BITS)];
 
 struct xe_mmio_range {
 	u32 start;
@@ -105,38 +119,57 @@ struct xe_gt {
 	struct {
 		/** @info.type: type of GT */
 		enum xe_gt_type type;
-		/** @info.id: Unique ID of this GT within the PCI Device */
-		u8 id;
 		/** @info.reference_clock: clock frequency */
 		u32 reference_clock;
-		/** @info.engine_mask: mask of engines present on GT */
-		u64 engine_mask;
+		/** @info.timestamp_base: GT timestamp base */
+		u32 timestamp_base;
 		/**
-		 * @info.__engine_mask: mask of engines present on GT read from
-		 * xe_pci.c, used to fake reading the engine_mask from the
-		 * hwconfig blob.
+		 * @info.engine_mask: mask of engines present on GT. Some of
+		 * them may be reserved in runtime and not available for user.
+		 * See @user_engines.mask
 		 */
-		u64 __engine_mask;
+		u64 engine_mask;
 		/** @info.gmdid: raw GMD_ID value from hardware */
 		u32 gmdid;
+		/** @info.id: Unique ID of this GT within the PCI Device */
+		u8 id;
+		/** @info.has_indirect_ring_state: GT has indirect ring state support */
+		u8 has_indirect_ring_state:1;
 	} info;
+
+#if IS_ENABLED(CONFIG_DEBUG_FS)
+	/** @stats: GT stats */
+	struct {
+		/** @stats.counters: counters for various GT stats */
+		atomic64_t counters[__XE_GT_STATS_NUM_IDS];
+	} stats;
+#endif
 
 	/**
 	 * @mmio: mmio info for GT.  All GTs within a tile share the same
 	 * register space, but have their own copy of GSI registers at a
-	 * specific offset, as well as their own forcewake handling.
+	 * specific offset.
+	 */
+	struct xe_mmio mmio;
+
+	/**
+	 * @pm: power management info for GT.  The driver uses the GT's
+	 * "force wake" interface to wake up specific parts of the GT hardware
+	 * from C6 sleep states and ensure the hardware remains awake while it
+	 * is being actively used.
 	 */
 	struct {
-		/** @mmio.fw: force wake for GT */
+		/** @pm.fw: force wake for GT */
 		struct xe_force_wake fw;
-		/**
-		 * @mmio.adj_limit: adjust MMIO address if address is below this
-		 * value
-		 */
-		u32 adj_limit;
-		/** @mmio.adj_offset: offect to add to MMIO address when adjusting */
-		u32 adj_offset;
-	} mmio;
+	} pm;
+
+	/** @sriov: virtualization data related to GT */
+	union {
+		/** @sriov.pf: PF data. Valid only if driver is running as PF */
+		struct xe_gt_sriov_pf pf;
+		/** @sriov.vf: VF data. Valid only if driver is running as VF */
+		struct xe_gt_sriov_vf vf;
+	} sriov;
 
 	/**
 	 * @reg_sr: table with registers to be restored on GT init/resume/reset
@@ -177,13 +210,6 @@ struct xe_gt {
 		 * xe_gt_tlb_fence_timeout after the timeut interval is over.
 		 */
 		struct delayed_work fence_tdr;
-		/** @tlb_invalidation.fence_context: context for TLB invalidation fences */
-		u64 fence_context;
-		/**
-		 * @tlb_invalidation.fence_seqno: seqno to TLB invalidation fences, protected by
-		 * tlb_invalidation.lock
-		 */
-		u32 fence_seqno;
 		/** @tlb_invalidation.lock: protects TLB invalidation fences */
 		spinlock_t lock;
 	} tlb_invalidation;
@@ -225,9 +251,14 @@ struct xe_gt {
 		struct pf_queue {
 			/** @usm.pf_queue.gt: back pointer to GT */
 			struct xe_gt *gt;
-#define PF_QUEUE_NUM_DW	128
 			/** @usm.pf_queue.data: data in the page fault queue */
-			u32 data[PF_QUEUE_NUM_DW];
+			u32 *data;
+			/**
+			 * @usm.pf_queue.num_dw: number of DWORDS in the page
+			 * fault queue. Dynamically calculated based on the number
+			 * of compute resources available.
+			 */
+			u32 num_dw;
 			/**
 			 * @usm.pf_queue.tail: tail pointer in DWs for page fault queue,
 			 * moved by worker which processes faults (consumer).
@@ -302,12 +333,6 @@ struct xe_gt {
 	/** @eclass: per hardware engine class interface on the GT */
 	struct xe_hw_engine_class_intf  eclass[XE_ENGINE_CLASS_MAX];
 
-	/** @pcode: GT's PCODE */
-	struct {
-		/** @pcode.lock: protecting GT's PCODE mailbox data */
-		struct mutex lock;
-	} pcode;
-
 	/** @sysfs: sysfs' kobj used by xe_gt_sysfs */
 	struct kobject *sysfs;
 
@@ -332,6 +357,15 @@ struct xe_gt {
 
 		/** @fuse_topo.eu_mask_per_dss: EU mask per DSS*/
 		xe_eu_mask_t eu_mask_per_dss;
+
+		/** @fuse_topo.l3_bank_mask: L3 bank mask */
+		xe_l3_bank_mask_t l3_bank_mask;
+
+		/**
+		 * @fuse_topo.eu_type: type/width of EU stored in
+		 * fuse_topo.eu_mask_per_dss
+		 */
+		enum xe_gt_eu_type eu_type;
 	} fuse_topo;
 
 	/** @steering: register steering for individual HW units */
@@ -343,13 +377,27 @@ struct xe_gt {
 		u16 group_target;
 		/** @steering.instance_target: instance to steer accesses to */
 		u16 instance_target;
+		/** @steering.initialized: Whether this steering range is initialized */
+		bool initialized;
 	} steering[NUM_STEERING_TYPES];
+
+	/**
+	 * @steering_dss_per_grp: number of DSS per steering group (gslice,
+	 *    cslice, etc.).
+	 */
+	unsigned int steering_dss_per_grp;
 
 	/**
 	 * @mcr_lock: protects the MCR_SELECTOR register for the duration
 	 *    of a steered operation
 	 */
 	spinlock_t mcr_lock;
+
+	/**
+	 * @global_invl_lock: protects the register for the duration
+	 *    of a global invalidation of l2 cache
+	 */
+	spinlock_t global_invl_lock;
 
 	/** @wa_active: keep track of active workarounds */
 	struct {
@@ -359,9 +407,46 @@ struct xe_gt {
 		unsigned long *engine;
 		/** @wa_active.lrc: bitmap with active LRC workarounds */
 		unsigned long *lrc;
-		/** @wa_active.oob: bitmap with active OOB workaroudns */
+		/** @wa_active.oob: bitmap with active OOB workarounds */
 		unsigned long *oob;
+		/**
+		 * @wa_active.oob_initialized: mark oob as initialized to help
+		 * detecting misuse of XE_WA() - it can only be called on
+		 * initialization after OOB WAs have being processed
+		 */
+		bool oob_initialized;
 	} wa_active;
+
+	/** @tuning_active: keep track of active tunings */
+	struct {
+		/** @tuning_active.gt: bitmap with active GT tunings */
+		unsigned long *gt;
+		/** @tuning_active.engine: bitmap with active engine tunings */
+		unsigned long *engine;
+		/** @tuning_active.lrc: bitmap with active LRC tunings */
+		unsigned long *lrc;
+	} tuning_active;
+
+	/** @user_engines: engines present in GT and available to userspace */
+	struct {
+		/**
+		 * @user_engines.mask: like @info->engine_mask, but take in
+		 * consideration only engines available to userspace
+		 */
+		u64 mask;
+
+		/**
+		 * @user_engines.instances_per_class: aggregate per class the
+		 * number of engines available to userspace
+		 */
+		u8 instances_per_class[XE_ENGINE_CLASS_MAX];
+	} user_engines;
+
+	/** @oa: oa observation subsystem per gt info */
+	struct xe_oa_gt oa;
+
+	/** @eu_stall: EU stall counters subsystem per gt info */
+	struct xe_eu_stall_gt *eu_stall;
 };
 
 #endif

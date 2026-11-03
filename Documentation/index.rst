@@ -84,7 +84,7 @@ which are kept separately from the kernel's own documentation.
 Firmware-related documentation
 ==============================
 The following holds information on the kernel's expectations regarding the
-platform firmwares.
+platform firmware.
 
 .. toctree::
    :maxdepth: 1
@@ -107,7 +107,7 @@ Other documentation
 
 There are several unsorted documents that don't seem to fit on other parts
 of the documentation body, or may require some adjustments and/or conversion
-to ReStructured Text format, or are simply too old.
+to reStructuredText format, or are simply too old.
 
 .. toctree::
    :maxdepth: 1

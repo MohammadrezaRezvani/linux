@@ -245,6 +245,10 @@ sub check_missing_tex($)
 
 sub get_sphinx_fname()
 {
+	if ($ENV{'SPHINXBUILD'}) {
+	    return $ENV{'SPHINXBUILD'};
+	}
+
 	my $fname = "sphinx-build";
 	return $fname if findprog($fname);
 
@@ -300,8 +304,6 @@ sub check_sphinx()
 	}
 
 	$cur_version = get_sphinx_version($sphinx);
-	die ("$sphinx returned an error") if (!$cur_version);
-
 	die "$sphinx didn't return its version" if (!$cur_version);
 
 	if ($cur_version lt $min_version) {
@@ -411,7 +413,7 @@ sub give_redhat_hints()
 	my $old = 0;
 	my $rel;
 	my $noto_sans_redhat = "google-noto-sans-cjk-ttc-fonts";
-	$rel = $1 if ($system_release =~ /release\s+(\d+)/);
+	$rel = $1 if ($system_release =~ /(release|Linux)\s+(\d+)/);
 
 	if (!($system_release =~ /Fedora/)) {
 		$map{"virtualenv"} = "python-virtualenv";
@@ -514,6 +516,7 @@ sub give_mageia_hints()
 {
 	my %map = (
 		"python-sphinx"		=> "python3-sphinx",
+		"yaml"			=> "python3-yaml",
 		"virtualenv"		=> "python3-virtualenv",
 		"dot"			=> "graphviz",
 		"convert"		=> "ImageMagick",
@@ -557,10 +560,11 @@ sub give_mageia_hints()
 sub give_arch_linux_hints()
 {
 	my %map = (
+		"yaml"			=> "python-yaml",
 		"virtualenv"		=> "python-virtualenv",
 		"dot"			=> "graphviz",
 		"convert"		=> "imagemagick",
-		"xelatex"		=> "texlive-bin",
+		"xelatex"		=> "texlive-xetex",
 		"latexmk"		=> "texlive-core",
 		"rsvg-convert"		=> "extra/librsvg",
 	);
@@ -587,6 +591,7 @@ sub give_arch_linux_hints()
 sub give_gentoo_hints()
 {
 	my %map = (
+		"yaml"			=> "dev-python/pyyaml",
 		"virtualenv"		=> "dev-python/virtualenv",
 		"dot"			=> "media-gfx/graphviz",
 		"convert"		=> "media-gfx/imagemagick",

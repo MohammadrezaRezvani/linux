@@ -23,7 +23,7 @@
 
 #define SWRS_SCP_HOST_CLK_DIV2_CTL_BANK(m) (0xE0 + 0x10 * (m))
 
-static struct wcd939x_sdw_ch_info wcd939x_sdw_rx_ch_info[] = {
+static const struct wcd939x_sdw_ch_info wcd939x_sdw_rx_ch_info[] = {
 	WCD_SDW_CH(WCD939X_HPH_L, WCD939X_HPH_PORT, BIT(0)),
 	WCD_SDW_CH(WCD939X_HPH_R, WCD939X_HPH_PORT, BIT(1)),
 	WCD_SDW_CH(WCD939X_CLSH, WCD939X_CLSH_PORT, BIT(0)),
@@ -36,7 +36,7 @@ static struct wcd939x_sdw_ch_info wcd939x_sdw_rx_ch_info[] = {
 	WCD_SDW_CH(WCD939X_HIFI_PCM_R, WCD939X_HIFI_PCM_PORT, BIT(1)),
 };
 
-static struct wcd939x_sdw_ch_info wcd939x_sdw_tx_ch_info[] = {
+static const struct wcd939x_sdw_ch_info wcd939x_sdw_tx_ch_info[] = {
 	WCD_SDW_CH(WCD939X_ADC1, WCD939X_ADC_1_4_PORT, BIT(0)),
 	WCD_SDW_CH(WCD939X_ADC2, WCD939X_ADC_1_4_PORT, BIT(1)),
 	WCD_SDW_CH(WCD939X_ADC3, WCD939X_ADC_1_4_PORT, BIT(2)),
@@ -1429,7 +1429,7 @@ static int wcd9390_probe(struct sdw_slave *pdev, const struct sdw_device_id *id)
 	 * Port map index starts with 0, however the data port for this codec
 	 * are from index 1
 	 */
-	if (of_property_read_bool(dev->of_node, "qcom,tx-port-mapping")) {
+	if (of_property_present(dev->of_node, "qcom,tx-port-mapping")) {
 		wcd->is_tx = true;
 		ret = of_property_read_u32_array(dev->of_node,
 						 "qcom,tx-port-mapping",
@@ -1453,12 +1453,12 @@ static int wcd9390_probe(struct sdw_slave *pdev, const struct sdw_device_id *id)
 	pdev->prop.lane_control_support = true;
 	pdev->prop.simple_clk_stop_capable = true;
 	if (wcd->is_tx) {
-		pdev->prop.source_ports = GENMASK(WCD939X_MAX_TX_SWR_PORTS, 0);
+		pdev->prop.source_ports = GENMASK(WCD939X_MAX_TX_SWR_PORTS - 1, 0);
 		pdev->prop.src_dpn_prop = wcd939x_tx_dpn_prop;
 		wcd->ch_info = &wcd939x_sdw_tx_ch_info[0];
 		pdev->prop.wake_capable = true;
 	} else {
-		pdev->prop.sink_ports = GENMASK(WCD939X_MAX_RX_SWR_PORTS, 0);
+		pdev->prop.sink_ports = GENMASK(WCD939X_MAX_RX_SWR_PORTS - 1, 0);
 		pdev->prop.sink_dpn_prop = wcd939x_rx_dpn_prop;
 		wcd->ch_info = &wcd939x_sdw_rx_ch_info[0];
 	}
@@ -1507,7 +1507,7 @@ static const struct sdw_device_id wcd9390_slave_id[] = {
 };
 MODULE_DEVICE_TABLE(sdw, wcd9390_slave_id);
 
-static int __maybe_unused wcd939x_sdw_runtime_suspend(struct device *dev)
+static int wcd939x_sdw_runtime_suspend(struct device *dev)
 {
 	struct wcd939x_sdw_priv *wcd = dev_get_drvdata(dev);
 
@@ -1519,7 +1519,7 @@ static int __maybe_unused wcd939x_sdw_runtime_suspend(struct device *dev)
 	return 0;
 }
 
-static int __maybe_unused wcd939x_sdw_runtime_resume(struct device *dev)
+static int wcd939x_sdw_runtime_resume(struct device *dev)
 {
 	struct wcd939x_sdw_priv *wcd = dev_get_drvdata(dev);
 
@@ -1532,7 +1532,7 @@ static int __maybe_unused wcd939x_sdw_runtime_resume(struct device *dev)
 }
 
 static const struct dev_pm_ops wcd939x_sdw_pm_ops = {
-	SET_RUNTIME_PM_OPS(wcd939x_sdw_runtime_suspend, wcd939x_sdw_runtime_resume, NULL)
+	RUNTIME_PM_OPS(wcd939x_sdw_runtime_suspend, wcd939x_sdw_runtime_resume, NULL)
 };
 
 static struct sdw_driver wcd9390_codec_driver = {
@@ -1542,7 +1542,7 @@ static struct sdw_driver wcd9390_codec_driver = {
 	.id_table = wcd9390_slave_id,
 	.driver = {
 		.name = "wcd9390-codec",
-		.pm = &wcd939x_sdw_pm_ops,
+		.pm = pm_ptr(&wcd939x_sdw_pm_ops),
 	}
 };
 module_sdw_driver(wcd9390_codec_driver);

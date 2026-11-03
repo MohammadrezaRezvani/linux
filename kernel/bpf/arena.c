@@ -3,9 +3,11 @@
 #include <linux/bpf.h>
 #include <linux/btf.h>
 #include <linux/err.h>
+#include "linux/filter.h"
 #include <linux/btf_ids.h>
 #include <linux/vmalloc.h>
 #include <linux/pagemap.h>
+#include "range_tree.h"
 
 /*
  * bpf_arena is a sparsely populated shared memory region between bpf program and
@@ -37,15 +39,15 @@
  */
 
 /* number of bytes addressable by LDX/STX insn with 16-bit 'off' field */
-#define GUARD_SZ (1ull << sizeof(((struct bpf_insn *)0)->off) * 8)
-#define KERN_VM_SZ ((1ull << 32) + GUARD_SZ)
+#define GUARD_SZ round_up(1ull << sizeof_field(struct bpf_insn, off) * 8, PAGE_SIZE << 1)
+#define KERN_VM_SZ (SZ_4G + GUARD_SZ)
 
 struct bpf_arena {
 	struct bpf_map map;
 	u64 user_vm_start;
 	u64 user_vm_end;
 	struct vm_struct *kern_vm;
-	struct maple_tree mt;
+	struct range_tree rt;
 	struct list_head vma_list;
 	struct mutex lock;
 };
@@ -98,6 +100,9 @@ static struct bpf_map *arena_map_alloc(union bpf_attr *attr)
 	u64 vm_range;
 	int err = -ENOMEM;
 
+	if (!bpf_jit_supports_arena())
+		return ERR_PTR(-EOPNOTSUPP);
+
 	if (attr->key_size || attr->value_size || attr->max_entries == 0 ||
 	    /* BPF_F_MMAPABLE must be set */
 	    !(attr->map_flags & BPF_F_MMAPABLE) ||
@@ -110,7 +115,7 @@ static struct bpf_map *arena_map_alloc(union bpf_attr *attr)
 		return ERR_PTR(-EINVAL);
 
 	vm_range = (u64)attr->max_entries * PAGE_SIZE;
-	if (vm_range > (1ull << 32))
+	if (vm_range > SZ_4G)
 		return ERR_PTR(-E2BIG);
 
 	if ((attr->map_extra >> 32) != ((attr->map_extra + vm_range - 1) >> 32))
@@ -132,7 +137,12 @@ static struct bpf_map *arena_map_alloc(union bpf_attr *attr)
 
 	INIT_LIST_HEAD(&arena->vma_list);
 	bpf_map_init_from_attr(&arena->map, attr);
-	mt_init_flags(&arena->mt, MT_FLAGS_ALLOC_RANGE);
+	range_tree_init(&arena->rt);
+	err = range_tree_set(&arena->rt, 0, attr->max_entries);
+	if (err) {
+		bpf_map_area_free(arena);
+		goto err;
+	}
 	mutex_init(&arena->lock);
 
 	return &arena->map;
@@ -183,7 +193,7 @@ static void arena_map_free(struct bpf_map *map)
 	apply_to_existing_page_range(&init_mm, bpf_arena_get_kern_vm_start(arena),
 				     KERN_VM_SZ - GUARD_SZ, existing_page_cb, NULL);
 	free_vm_area(arena->kern_vm);
-	mtree_destroy(&arena->mt);
+	range_tree_destroy(&arena->rt);
 	bpf_map_area_free(arena);
 }
 
@@ -212,6 +222,7 @@ static u64 arena_map_mem_usage(const struct bpf_map *map)
 struct vma_list {
 	struct vm_area_struct *vma;
 	struct list_head head;
+	refcount_t mmap_count;
 };
 
 static int remember_vma(struct bpf_arena *arena, struct vm_area_struct *vma)
@@ -221,26 +232,34 @@ static int remember_vma(struct bpf_arena *arena, struct vm_area_struct *vma)
 	vml = kmalloc(sizeof(*vml), GFP_KERNEL);
 	if (!vml)
 		return -ENOMEM;
+	refcount_set(&vml->mmap_count, 1);
 	vma->vm_private_data = vml;
 	vml->vma = vma;
 	list_add(&vml->head, &arena->vma_list);
 	return 0;
 }
 
+static void arena_vm_open(struct vm_area_struct *vma)
+{
+	struct vma_list *vml = vma->vm_private_data;
+
+	refcount_inc(&vml->mmap_count);
+}
+
 static void arena_vm_close(struct vm_area_struct *vma)
 {
 	struct bpf_map *map = vma->vm_file->private_data;
 	struct bpf_arena *arena = container_of(map, struct bpf_arena, map);
-	struct vma_list *vml;
+	struct vma_list *vml = vma->vm_private_data;
 
+	if (!refcount_dec_and_test(&vml->mmap_count))
+		return;
 	guard(mutex)(&arena->lock);
-	vml = vma->vm_private_data;
+	/* update link list under lock */
 	list_del(&vml->head);
 	vma->vm_private_data = NULL;
 	kfree(vml);
 }
-
-#define MT_ENTRY ((void *)&arena_map_ops) /* unused. has to be valid pointer */
 
 static vm_fault_t arena_vm_fault(struct vm_fault *vmf)
 {
@@ -251,7 +270,7 @@ static vm_fault_t arena_vm_fault(struct vm_fault *vmf)
 	int ret;
 
 	kbase = bpf_arena_get_kern_vm_start(arena);
-	kaddr = kbase + (u32)(vmf->address & PAGE_MASK);
+	kaddr = kbase + (u32)(vmf->address);
 
 	guard(mutex)(&arena->lock);
 	page = vmalloc_to_page((void *)kaddr);
@@ -263,20 +282,20 @@ static vm_fault_t arena_vm_fault(struct vm_fault *vmf)
 		/* User space requested to segfault when page is not allocated by bpf prog */
 		return VM_FAULT_SIGSEGV;
 
-	ret = mtree_insert(&arena->mt, vmf->pgoff, MT_ENTRY, GFP_KERNEL);
+	ret = range_tree_clear(&arena->rt, vmf->pgoff, 1);
 	if (ret)
 		return VM_FAULT_SIGSEGV;
 
 	/* Account into memcg of the process that created bpf_arena */
-	ret = bpf_map_alloc_pages(map, GFP_KERNEL | __GFP_ZERO, NUMA_NO_NODE, 1, &page);
+	ret = bpf_map_alloc_pages(map, NUMA_NO_NODE, 1, &page);
 	if (ret) {
-		mtree_erase(&arena->mt, vmf->pgoff);
+		range_tree_set(&arena->rt, vmf->pgoff, 1);
 		return VM_FAULT_SIGSEGV;
 	}
 
 	ret = vm_area_map_pages(arena->kern_vm, kaddr, kaddr + PAGE_SIZE, &page);
 	if (ret) {
-		mtree_erase(&arena->mt, vmf->pgoff);
+		range_tree_set(&arena->rt, vmf->pgoff, 1);
 		__free_page(page);
 		return VM_FAULT_SIGSEGV;
 	}
@@ -287,6 +306,7 @@ out:
 }
 
 static const struct vm_operations_struct arena_vm_ops = {
+	.open		= arena_vm_open,
 	.close		= arena_vm_close,
 	.fault          = arena_vm_fault,
 };
@@ -301,7 +321,7 @@ static unsigned long arena_get_unmapped_area(struct file *filp, unsigned long ad
 
 	if (pgoff)
 		return -EINVAL;
-	if (len > (1ull << 32))
+	if (len > SZ_4G)
 		return -E2BIG;
 
 	/* if user_vm_start was specified at arena creation time */
@@ -314,7 +334,7 @@ static unsigned long arena_get_unmapped_area(struct file *filp, unsigned long ad
 			return -EINVAL;
 	}
 
-	ret = current->mm->get_unmapped_area(filp, addr, len * 2, 0, flags);
+	ret = mm_get_unmapped_area(current->mm, filp, addr, len * 2, 0, flags);
 	if (IS_ERR_VALUE(ret))
 		return ret;
 	if ((ret >> 32) == ((ret + len - 1) >> 32))
@@ -322,7 +342,7 @@ static unsigned long arena_get_unmapped_area(struct file *filp, unsigned long ad
 	if (WARN_ON_ONCE(arena->user_vm_start))
 		/* checks at map creation time should prevent this */
 		return -EFAULT;
-	return round_up(ret, 1ull << 32);
+	return round_up(ret, SZ_4G);
 }
 
 static int arena_map_mmap(struct bpf_map *map, struct vm_area_struct *vma)
@@ -346,7 +366,7 @@ static int arena_map_mmap(struct bpf_map *map, struct vm_area_struct *vma)
 		return -EBUSY;
 
 	/* Earlier checks should prevent this */
-	if (WARN_ON_ONCE(vma->vm_end - vma->vm_start > (1ull << 32) || vma->vm_pgoff))
+	if (WARN_ON_ONCE(vma->vm_end - vma->vm_start > SZ_4G || vma->vm_pgoff))
 		return -EFAULT;
 
 	if (remember_vma(arena, vma))
@@ -420,34 +440,43 @@ static long arena_alloc_pages(struct bpf_arena *arena, long uaddr, long page_cnt
 		if (uaddr & ~PAGE_MASK)
 			return 0;
 		pgoff = compute_pgoff(arena, uaddr);
-		if (pgoff + page_cnt > page_cnt_max)
+		if (pgoff > page_cnt_max - page_cnt)
 			/* requested address will be outside of user VMA */
 			return 0;
 	}
 
-	/* zeroing is needed, since alloc_pages_bulk_array() only fills in non-zero entries */
+	/* zeroing is needed, since alloc_pages_bulk() only fills in non-zero entries */
 	pages = kvcalloc(page_cnt, sizeof(struct page *), GFP_KERNEL);
 	if (!pages)
 		return 0;
 
 	guard(mutex)(&arena->lock);
 
-	if (uaddr)
-		ret = mtree_insert_range(&arena->mt, pgoff, pgoff + page_cnt - 1,
-					 MT_ENTRY, GFP_KERNEL);
-	else
-		ret = mtree_alloc_range(&arena->mt, &pgoff, MT_ENTRY,
-					page_cnt, 0, page_cnt_max - 1, GFP_KERNEL);
+	if (uaddr) {
+		ret = is_range_tree_set(&arena->rt, pgoff, page_cnt);
+		if (ret)
+			goto out_free_pages;
+		ret = range_tree_clear(&arena->rt, pgoff, page_cnt);
+	} else {
+		ret = pgoff = range_tree_find(&arena->rt, page_cnt);
+		if (pgoff >= 0)
+			ret = range_tree_clear(&arena->rt, pgoff, page_cnt);
+	}
 	if (ret)
 		goto out_free_pages;
 
-	ret = bpf_map_alloc_pages(&arena->map, GFP_KERNEL | __GFP_ZERO,
-				  node_id, page_cnt, pages);
+	ret = bpf_map_alloc_pages(&arena->map, node_id, page_cnt, pages);
 	if (ret)
 		goto out;
 
 	uaddr32 = (u32)(arena->user_vm_start + pgoff * PAGE_SIZE);
-	/* Earlier checks make sure that uaddr32 + page_cnt * PAGE_SIZE will not overflow 32-bit */
+	/* Earlier checks made sure that uaddr32 + page_cnt * PAGE_SIZE - 1
+	 * will not overflow 32-bit. Lower 32-bit need to represent
+	 * contiguous user address range.
+	 * Map these pages at kern_vm_start base.
+	 * kern_vm_start + uaddr32 + page_cnt * PAGE_SIZE - 1 can overflow
+	 * lower 32-bit and it's ok.
+	 */
 	ret = vm_area_map_pages(arena->kern_vm, kern_vm_start + uaddr32,
 				kern_vm_start + uaddr32 + page_cnt * PAGE_SIZE, pages);
 	if (ret) {
@@ -458,7 +487,7 @@ static long arena_alloc_pages(struct bpf_arena *arena, long uaddr, long page_cnt
 	kvfree(pages);
 	return clear_lo32(arena->user_vm_start) + uaddr32;
 out:
-	mtree_erase(&arena->mt, pgoff);
+	range_tree_set(&arena->rt, pgoff, page_cnt);
 out_free_pages:
 	kvfree(pages);
 	return 0;
@@ -498,7 +527,7 @@ static void arena_free_pages(struct bpf_arena *arena, long uaddr, long page_cnt)
 
 	pgoff = compute_pgoff(arena, uaddr);
 	/* clear range */
-	mtree_store_range(&arena->mt, pgoff, pgoff + page_cnt - 1, NULL, GFP_KERNEL);
+	range_tree_set(&arena->rt, pgoff, page_cnt);
 
 	if (page_cnt > 1)
 		/* bulk zap if multiple pages being freed */
@@ -510,10 +539,43 @@ static void arena_free_pages(struct bpf_arena *arena, long uaddr, long page_cnt)
 		if (!page)
 			continue;
 		if (page_cnt == 1 && page_mapped(page)) /* mapped by some user process */
+			/* Optimization for the common case of page_cnt==1:
+			 * If page wasn't mapped into some user vma there
+			 * is no need to call zap_pages which is slow. When
+			 * page_cnt is big it's faster to do the batched zap.
+			 */
 			zap_pages(arena, full_uaddr, 1);
 		vm_area_unmap_pages(arena->kern_vm, kaddr, kaddr + PAGE_SIZE);
 		__free_page(page);
 	}
+}
+
+/*
+ * Reserve an arena virtual address range without populating it. This call stops
+ * bpf_arena_alloc_pages from adding pages to this range.
+ */
+static int arena_reserve_pages(struct bpf_arena *arena, long uaddr, u32 page_cnt)
+{
+	long page_cnt_max = (arena->user_vm_end - arena->user_vm_start) >> PAGE_SHIFT;
+	long pgoff;
+	int ret;
+
+	if (uaddr & ~PAGE_MASK)
+		return 0;
+
+	pgoff = compute_pgoff(arena, uaddr);
+	if (pgoff + page_cnt > page_cnt_max)
+		return -EINVAL;
+
+	guard(mutex)(&arena->lock);
+
+	/* Cannot guard already allocated pages. */
+	ret = is_range_tree_set(&arena->rt, pgoff, page_cnt);
+	if (ret)
+		return -EBUSY;
+
+	/* "Allocate" the region to prevent it from being allocated. */
+	return range_tree_clear(&arena->rt, pgoff, page_cnt);
 }
 
 __bpf_kfunc_start_defs();
@@ -539,11 +601,26 @@ __bpf_kfunc void bpf_arena_free_pages(void *p__map, void *ptr__ign, u32 page_cnt
 		return;
 	arena_free_pages(arena, (long)ptr__ign, page_cnt);
 }
+
+__bpf_kfunc int bpf_arena_reserve_pages(void *p__map, void *ptr__ign, u32 page_cnt)
+{
+	struct bpf_map *map = p__map;
+	struct bpf_arena *arena = container_of(map, struct bpf_arena, map);
+
+	if (map->map_type != BPF_MAP_TYPE_ARENA)
+		return -EINVAL;
+
+	if (!page_cnt)
+		return 0;
+
+	return arena_reserve_pages(arena, (long)ptr__ign, page_cnt);
+}
 __bpf_kfunc_end_defs();
 
 BTF_KFUNCS_START(arena_kfuncs)
-BTF_ID_FLAGS(func, bpf_arena_alloc_pages, KF_TRUSTED_ARGS | KF_SLEEPABLE)
-BTF_ID_FLAGS(func, bpf_arena_free_pages, KF_TRUSTED_ARGS | KF_SLEEPABLE)
+BTF_ID_FLAGS(func, bpf_arena_alloc_pages, KF_TRUSTED_ARGS | KF_SLEEPABLE | KF_ARENA_RET | KF_ARENA_ARG2)
+BTF_ID_FLAGS(func, bpf_arena_free_pages, KF_TRUSTED_ARGS | KF_SLEEPABLE | KF_ARENA_ARG2)
+BTF_ID_FLAGS(func, bpf_arena_reserve_pages, KF_TRUSTED_ARGS | KF_SLEEPABLE | KF_ARENA_ARG2)
 BTF_KFUNCS_END(arena_kfuncs)
 
 static const struct btf_kfunc_id_set common_kfunc_set = {

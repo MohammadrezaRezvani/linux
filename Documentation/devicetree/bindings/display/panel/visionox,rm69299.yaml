@@ -18,9 +18,12 @@ allOf:
 
 properties:
   compatible:
-    const: visionox,rm69299-1080p-display
+    enum:
+      - visionox,rm69299-1080p-display
+      - visionox,rm69299-shift
 
-  reg: true
+  reg:
+    maxItems: 1
 
   vdda-supply:
     description: |

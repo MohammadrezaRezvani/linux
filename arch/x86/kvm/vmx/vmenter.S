@@ -59,8 +59,7 @@
 	 * without the explicit restore, thinks the stack is getting walloped.
 	 * Using an unwind hint is problematic due to x86-64's dynamic alignment.
 	 */
-	mov %_ASM_BP, %_ASM_SP
-	pop %_ASM_BP
+	leave
 	RET
 .endm
 
@@ -274,6 +273,8 @@ SYM_INNER_LABEL_ALIGN(vmx_vmexit, SYM_L_GLOBAL)
 	pop %_ASM_ARG1	/* @vmx */
 
 	call vmx_spec_ctrl_restore_host
+
+	CLEAR_BRANCH_HISTORY_VMEXIT
 
 	/* Put return value in AX */
 	mov %_ASM_BX, %_ASM_AX

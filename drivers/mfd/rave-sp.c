@@ -21,7 +21,7 @@
 #include <linux/of_platform.h>
 #include <linux/sched.h>
 #include <linux/serdev.h>
-#include <asm/unaligned.h>
+#include <linux/unaligned.h>
 
 /*
  * UART protocol using following entities:
@@ -471,8 +471,8 @@ static void rave_sp_receive_frame(struct rave_sp *sp,
 		rave_sp_receive_reply(sp, data, length);
 }
 
-static ssize_t rave_sp_receive_buf(struct serdev_device *serdev,
-				   const u8 *buf, size_t size)
+static size_t rave_sp_receive_buf(struct serdev_device *serdev,
+				  const u8 *buf, size_t size)
 {
 	struct device *dev = &serdev->dev;
 	struct rave_sp *sp = dev_get_drvdata(dev);

@@ -2,8 +2,7 @@
 #ifndef __ASM_ARC_CACHETYPE_H
 #define __ASM_ARC_CACHETYPE_H
 
-#include <linux/types.h>
-
-#define cpu_dcache_is_aliasing()	true
+#define cpu_dcache_is_aliasing()	false
+#define cpu_icache_is_aliasing()	true
 
 #endif

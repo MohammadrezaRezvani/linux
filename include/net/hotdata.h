@@ -23,7 +23,6 @@ struct net_hotdata {
 	struct net_offload	udpv6_offload;
 #endif
 	struct list_head	offload_base;
-	struct list_head	ptype_all;
 	struct kmem_cache	*skbuff_cache;
 	struct kmem_cache	*skbuff_fclone_cache;
 	struct kmem_cache	*skb_small_head_cache;
@@ -38,6 +37,9 @@ struct net_hotdata {
 	int			max_backlog;
 	int			dev_tx_weight;
 	int			dev_rx_weight;
+	int			sysctl_max_skb_frags;
+	int			sysctl_skb_defer_max;
+	int			sysctl_mem_pcpu_rsv;
 };
 
 #define inet_ehash_secret	net_hotdata.tcp_protocol.secret

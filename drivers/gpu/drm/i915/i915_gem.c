@@ -39,8 +39,6 @@
 #include <drm/drm_cache.h>
 #include <drm/drm_vma_manager.h>
 
-#include "display/intel_display.h"
-
 #include "gem/i915_gem_clflush.h"
 #include "gem/i915_gem_context.h"
 #include "gem/i915_gem_ioctls.h"
@@ -1148,11 +1146,11 @@ int i915_gem_init(struct drm_i915_private *dev_priv)
 	int ret;
 
 	/*
-	 * In the proccess of replacing cache_level with pat_index a tricky
+	 * In the process of replacing cache_level with pat_index a tricky
 	 * dependency is created on the definition of the enum i915_cache_level.
-	 * in case this enum is changed, PTE encode would be broken.
+	 * In case this enum is changed, PTE encode would be broken.
 	 * Add a WARNING here. And remove when we completely quit using this
-	 * enum
+	 * enum.
 	 */
 	BUILD_BUG_ON(I915_CACHE_NONE != 0 ||
 		     I915_CACHE_LLC != 1 ||

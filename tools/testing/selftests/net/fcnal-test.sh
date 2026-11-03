@@ -3667,7 +3667,7 @@ ipv6_addr_bind_novrf()
 	# when it really should not
 	a=${NSA_LO_IP6}
 	log_start
-	show_hint "Tecnically should fail since address is not on device but kernel allows"
+	show_hint "Technically should fail since address is not on device but kernel allows"
 	run_cmd nettest -6 -s -l ${a} -I ${NSA_DEV} -t1 -b
 	log_test_addr ${a} $? 0 "TCP socket bind to out of scope local address"
 }
@@ -3724,7 +3724,7 @@ ipv6_addr_bind_vrf()
 	# passes when it really should not
 	a=${VRF_IP6}
 	log_start
-	show_hint "Tecnically should fail since address is not on device but kernel allows"
+	show_hint "Technically should fail since address is not on device but kernel allows"
 	run_cmd nettest -6 -s -l ${a} -I ${NSA_DEV} -t1 -b
 	log_test_addr ${a} $? 0 "TCP socket bind to VRF address with device bind"
 
@@ -4304,14 +4304,7 @@ elif [ "$TESTS" = "ipv6" ]; then
 	TESTS="$TESTS_IPV6"
 fi
 
-# nettest can be run from PATH or from same directory as this selftest
-if ! which nettest >/dev/null; then
-	PATH=$PWD:$PATH
-	if ! which nettest >/dev/null; then
-		echo "'nettest' command not found; skipping tests"
-		exit $ksft_skip
-	fi
-fi
+check_gen_prog "nettest"
 
 declare -i nfail=0
 declare -i nsuccess=0

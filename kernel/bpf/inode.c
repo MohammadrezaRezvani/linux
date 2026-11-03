@@ -150,14 +150,14 @@ static void bpf_dentry_finalize(struct dentry *dentry, struct inode *inode,
 	inode_set_mtime_to_ts(dir, inode_set_ctime_current(dir));
 }
 
-static int bpf_mkdir(struct mnt_idmap *idmap, struct inode *dir,
-		     struct dentry *dentry, umode_t mode)
+static struct dentry *bpf_mkdir(struct mnt_idmap *idmap, struct inode *dir,
+				struct dentry *dentry, umode_t mode)
 {
 	struct inode *inode;
 
 	inode = bpf_get_inode(dir->i_sb, dir, mode | S_IFDIR);
 	if (IS_ERR(inode))
-		return PTR_ERR(inode);
+		return ERR_CAST(inode);
 
 	inode->i_op = &bpf_dir_iops;
 	inode->i_fop = &simple_dir_operations;
@@ -166,7 +166,7 @@ static int bpf_mkdir(struct mnt_idmap *idmap, struct inode *dir,
 	inc_nlink(dir);
 
 	bpf_dentry_finalize(dentry, inode, dir);
-	return 0;
+	return NULL;
 }
 
 struct map_iter {
@@ -421,7 +421,7 @@ static int bpf_iter_link_pin_kernel(struct dentry *parent,
 	int ret;
 
 	inode_lock(parent->d_inode);
-	dentry = lookup_one_len(name, parent, strlen(name));
+	dentry = lookup_noperm(&QSTR(name), parent);
 	if (IS_ERR(dentry)) {
 		inode_unlock(parent->d_inode);
 		return PTR_ERR(dentry);
@@ -709,10 +709,10 @@ static void seq_print_delegate_opts(struct seq_file *m,
 			msk = 1ULL << e->val;
 			if (delegate_msk & msk) {
 				/* emit lower-case name without prefix */
-				seq_printf(m, "%c", first ? '=' : ':');
+				seq_putc(m, first ? '=' : ':');
 				name += pfx_len;
 				while (*name) {
-					seq_printf(m, "%c", tolower(*name));
+					seq_putc(m, tolower(*name));
 					name++;
 				}
 
@@ -880,7 +880,7 @@ static int bpf_parse_param(struct fs_context *fc, struct fs_parameter *param)
 		const struct btf_type *enum_t;
 		const char *enum_pfx;
 		u64 *delegate_msk, msk = 0;
-		char *p;
+		char *p, *str;
 		int val;
 
 		/* ignore errors, fallback to hex */
@@ -911,7 +911,8 @@ static int bpf_parse_param(struct fs_context *fc, struct fs_parameter *param)
 			return -EINVAL;
 		}
 
-		while ((p = strsep(&param->string, ":"))) {
+		str = param->string;
+		while ((p = strsep(&str, ":"))) {
 			if (strcmp(p, "any") == 0) {
 				msk |= ~0ULL;
 			} else if (find_btf_enum_const(info.btf, enum_t, enum_pfx, p, &val)) {

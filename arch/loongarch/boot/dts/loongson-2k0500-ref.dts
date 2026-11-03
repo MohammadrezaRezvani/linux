@@ -41,17 +41,26 @@
 	};
 };
 
+&apbdma3 {
+	status = "okay";
+};
+
+&mmc0 {
+	status = "okay";
+	bus-width = <4>;
+};
+
 &gmac0 {
 	status = "okay";
 
-	phy-mode = "rgmii";
+	phy-mode = "rgmii-id";
 	bus_id = <0x0>;
 };
 
 &gmac1 {
 	status = "okay";
 
-	phy-mode = "rgmii";
+	phy-mode = "rgmii-id";
 	bus_id = <0x1>;
 };
 

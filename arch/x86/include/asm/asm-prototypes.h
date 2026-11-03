@@ -14,8 +14,12 @@
 #include <asm/asm.h>
 #include <asm/fred.h>
 #include <asm/gsseg.h>
+#include <asm/nospec-branch.h>
 
-#ifndef CONFIG_X86_CMPXCHG64
+#ifndef CONFIG_X86_CX8
 extern void cmpxchg8b_emu(void);
 #endif
 
+#ifdef CONFIG_STACKPROTECTOR
+extern unsigned long __ref_stack_chk_guard;
+#endif

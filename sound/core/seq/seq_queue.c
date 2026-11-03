@@ -460,7 +460,8 @@ int snd_seq_queue_timer_set_tempo(int queueid, int client,
 		return -EPERM;
 	}
 
-	result = snd_seq_timer_set_tempo_ppq(q->timer, info->tempo, info->ppq);
+	result = snd_seq_timer_set_tempo_ppq(q->timer, info->tempo, info->ppq,
+					     info->tempo_base);
 	if (result >= 0 && info->skew_base > 0)
 		result = snd_seq_timer_set_skew(q->timer, info->skew_value,
 						info->skew_base);
@@ -562,22 +563,6 @@ void snd_seq_queue_client_leave(int client)
 
 
 /*----------------------------------------------------------------*/
-
-/* remove cells from all queues */
-void snd_seq_queue_client_leave_cells(int client)
-{
-	int i;
-	struct snd_seq_queue *q;
-
-	for (i = 0; i < SNDRV_SEQ_MAX_QUEUES; i++) {
-		q = queueptr(i);
-		if (!q)
-			continue;
-		snd_seq_prioq_leave(q->tickq, client, 0);
-		snd_seq_prioq_leave(q->timeq, client, 0);
-		queuefree(q);
-	}
-}
 
 /* remove cells based on flush criteria */
 void snd_seq_queue_remove_cells(int client, struct snd_seq_remove_events *info)
@@ -724,7 +709,7 @@ void snd_seq_info_queues_read(struct snd_info_entry *entry,
 
 		tmr = q->timer;
 		if (tmr->tempo)
-			bpm = 60000000 / tmr->tempo;
+			bpm = (60000 * tmr->tempo_base) / tmr->tempo;
 		else
 			bpm = 0;
 
@@ -741,6 +726,7 @@ void snd_seq_info_queues_read(struct snd_info_entry *entry,
 		snd_iprintf(buffer, "timer state        : %s\n", tmr->running ? "Running" : "Stopped");
 		snd_iprintf(buffer, "timer PPQ          : %d\n", tmr->ppq);
 		snd_iprintf(buffer, "current tempo      : %d\n", tmr->tempo);
+		snd_iprintf(buffer, "tempo base         : %d ns\n", tmr->tempo_base);
 		snd_iprintf(buffer, "current BPM        : %d\n", bpm);
 		snd_iprintf(buffer, "current time       : %d.%09d s\n", tmr->cur_time.tv_sec, tmr->cur_time.tv_nsec);
 		snd_iprintf(buffer, "current tick       : %d\n", tmr->tick.cur_tick);

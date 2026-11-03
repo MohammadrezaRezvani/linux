@@ -74,6 +74,13 @@ properties:
       - const: asrck_f
       - const: spba
 
+  power-domains:
+    maxItems: 1
+
+  port:
+    $ref: audio-graph-port.yaml#
+    unevaluatedProperties: false
+
   fsl,asrc-rate:
     $ref: /schemas/types.yaml#/definitions/uint32
     description: The mutual sample rate used by DPCM Back Ends
@@ -117,6 +124,7 @@ required:
   - fsl,asrc-width
 
 allOf:
+  - $ref: dai-common.yaml#
   - if:
       properties:
         compatible:
@@ -131,7 +139,18 @@ allOf:
       properties:
         fsl,asrc-clk-map: false
 
-additionalProperties: false
+  - if:
+      properties:
+        compatible:
+          contains:
+            enum:
+              - fsl,imx8qm-asrc
+              - fsl,imx8qxp-asrc
+    then:
+      required:
+        - power-domains
+
+unevaluatedProperties: false
 
 examples:
   - |
@@ -159,4 +178,12 @@ examples:
                     "txa", "txb", "txc";
         fsl,asrc-rate  = <48000>;
         fsl,asrc-width = <16>;
+
+        port {
+            playback-only;
+
+            asrc_endpoint: endpoint {
+                remote-endpoint = <&fe00_ep>;
+            };
+       };
     };
